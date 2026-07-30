@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eFootball™ Premium 3D Top-Up & Gaming Hub</title>
+
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="বাংলাদেশের সবচেয়ে দ্রুততম এবং ১০০% নিরাপদ eFootball Coin Top-Up প্ল্যাটফর্ম। ইনস্ট্যান্ট কয়েন ডেলিভারি ও গেমিং গাইড।">
+    <meta name="keywords" content="eFootball Coins, eFootball Topup Bangladesh, Konami ID Topup, eFootball 2026">
+    <meta property="og:title" content="eFootball™ Premium 3D Top-Up Store">
+    <meta property="og:description" content="ইনস্ট্যান্ট কয়েন ডেলিভারি ও সর্বনিম্ন দামে ই-ফুটবল কয়েন টপ-আপ করুন।">
+    <meta property="og:image" content="https://via.placeholder.com/1200x630">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Google Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&family=Hind+Siliguri:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- CSS File Link -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Three.js CDN for 3D Graphics -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <!-- 3D Canvas Background -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Top Announcement Bar -->
+    <div class="announcement-bar">
+        <span><i class="fa-solid fa-bolt text-gold"></i> ফ্ল্যাশ সেল চলছে! প্রতিটি প্যাকেজে পাচ্ছেন ১০% অতিরিক্ত বোনাস কয়েন!</span>
+    </div>
+
+    <!-- Navigation Header -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <i class="fa-solid fa-futbol logo-icon"></i>
+                <span>eFOOTBALL<small class="text-blue">3D</small></span>
+            </a>
+
+            <div class="nav-search">
+                <input type="text" placeholder="কয়েন প্যাকেজ বা ব্লগ খুঁজুন...">
+                <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="#home" class="nav-link active">হোম</a>
+                <a href="#packages" class="nav-link">কয়েন প্যাকেজ</a>
+                <a href="#calculator" class="nav-link">ক্যালকুলেটর</a>
+                <a href="#flash-sale" class="nav-link">অফার</a>
+                <a href="#blog" class="nav-link">ব্লগ</a>
+                <a href="#faq" class="nav-link">FAQ</a>
+                <a href="#contact" class="nav-link">যোগাযোগ</a>
+            </nav>
+
+            <div class="nav-actions">
+                <button class="icon-btn" title="কার্ট"><i class="fa-solid fa-cart-shopping"></i><span class="badge">0</span></button>
+                <a href="#packages" class="btn btn-gold"><i class="fa-solid fa-coins"></i> টপ-আপ</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <div class="hero-badge"><i class="fa-solid fa-shield-halved"></i> ১০০% নিরাপদ & ইনস্ট্যান্ট ডেলিভারি</div>
+            <h1>LARGEST <span class="text-neon-blue">eFOOTBALL</span> TOP-UP STORE</h1>
+            <p>আপনার অ্যাকাউন্ট আইডি ব্যবহার করে কয়েক সেকেন্ডে eFootball™ Coins টপ-আপ করুন। কোনো পাসওয়ার্ডের প্রয়োজন নেই!</p>
+            
+            <div class="hero-btns">
+                <a href="#packages" class="btn btn-neon"><i class="fa-solid fa-cart-bolt"></i> কয়েন কিনুন</a>
+                <a href="#calculator" class="btn btn-outline"><i class="fa-solid fa-calculator"></i> কয়েন হিসেব করুন</a>
+            </div>
+
+            <div class="hero-stats-mini">
+                <div><h4 class="counter" data-target="50000">0</h4><p>সফল অর্ডার</p></div>
+                <div><h4 class="counter" data-target="100000">0</h4><p>কয়েন বিক্রি</p></div>
+                <div><h4>4.9 ★</h4><p>গ্রাহক রেটিং</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="feature-card">
+            <i class="fa-solid fa-bolt-lightning feature-icon"></i>
+            <h3>ইনস্ট্যান্ট প্রসেসিং</h3>
+            <p>অর্ডার সম্পূর্ণ হওয়ার ১-৫ মিনিটের মধ্যে কয়েন পৌঁছে যাবে।</p>
+        </div>
+        <div class="feature-card">
+            <i class="fa-solid fa-lock feature-icon"></i>
+            <h3>এনক্রিপ্টেড পেমেন্ট</h3>
+            <p>bKash, Nagad ও আন্তর্জাতিক পেমেন্টে সম্পূর্ণ নিরাপদ।</p>
+        </div>
+        <div class="feature-card">
+            <i class="fa-solid fa-headset feature-icon"></i>
+            <h3>২৪/৭ লাইভ সাপোর্ট</h3>
+            <p>যেকোনো প্রয়োজনে আমাদের হোয়াটসঅ্যাপ ও ডিসকর্ড টিম প্রস্তুত।</p>
+        </div>
+    </section>
+
+    <!-- Coin Packages Section -->
+    <section class="packages-section" id="packages">
+        <div class="section-header">
+            <h2>eFOOTBALL <span>COIN PACKAGES</span></h2>
+            <p>আপনার পছন্দনীয় কয়েন প্যাক সিলেক্ট করুন</p>
+        </div>
+
+        <div class="grid-container" id="packagesGrid">
+            <!-- Coin Card 1 -->
+            <div class="card-3d">
+                <span class="card-tag">বাজেট প্যাক</span>
+                <div class="coin-icon"><i class="fa-solid fa-coins"></i></div>
+                <h3>100 Coins</h3>
+                <div class="price-box"><span class="old-price">৳ ১২০</span> ৳ ৯৯</div>
+                <p class="stock-status"><i class="fa-solid fa-check-circle"></i> ইন স্টক</p>
+                <button class="btn btn-card" onclick="openCheckout('100 Coins', 99)">এখনই কিনুন</button>
+            </div>
+
+            <!-- Coin Card 2 -->
+            <div class="card-3d popular">
+                <span class="card-tag gold">মোস্ট পপুলার</span>
+                <div class="coin-icon gold"><i class="fa-solid fa-coins"></i></div>
+                <h3>550 Coins</h3>
+                <div class="price-box"><span class="old-price">৳ ৫৫০</span> ৳ ৪70</div>
+                <p class="stock-status"><i class="fa-solid fa-check-circle"></i> ইন স্টক</p>
+                <button class="btn btn-gold" onclick="openCheckout('550 Coins', 470)">এখনই কিনুন</button>
+            </div>
+
+            <!-- Coin Card 3 -->
+            <div class="card-3d">
+                <div class="coin-icon"><i class="fa-solid fa-coins"></i></div>
+                <h3>1,040 Coins</h3>
+                <div class="price-box"><span class="old-price">৳ ১,০০০</span> ৳ ৮90</div>
+                <p class="stock-status"><i class="fa-solid fa-check-circle"></i> ইন স্টক</p>
+                <button class="btn btn-card" onclick="openCheckout('1040 Coins', 890)">এখনই কিনুন</button>
+            </div>
+
+            <!-- Coin Card 4 -->
+            <div class="card-3d">
+                <span class="card-tag">মেগা বোনাস</span>
+                <div class="coin-icon"><i class="fa-solid fa-coins"></i></div>
+                <h3>2,130 Coins</h3>
+                <div class="price-box"><span class="old-price">৳ ১,৯৫০</span> ৳ ১,৭৫০</div>
+                <p class="stock-status"><i class="fa-solid fa-check-circle"></i> ইন স্টক</p>
+                <button class="btn btn-card" onclick="openCheckout('2130 Coins', 1750)">এখনই কিনুন</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dynamic Coin Calculator Widget -->
+    <section class="calculator-section" id="calculator">
+        <div class="glass-box">
+            <h2><i class="fa-solid fa-calculator text-neon-blue"></i> eFootball™ কয়েন ক্যালকুলেটর</h2>
+            <p>আপনার বাজেট অনুযায়ী কয়েন এবং বিডিটি মূল্য হিসেব করুন</p>
+            <div class="calc-inputs">
+                <div class="input-group">
+                    <label>কয়েন সংখ্যা লিখুন:</label>
+                    <input type="number" id="coinInput" value="1000" min="100" step="100" oninput="calculatePrice()">
+                </div>
+                <div class="calc-result">
+                    <h4>আনুমানিক মূল্য:</h4>
+                    <span id="calculatedPrice">৳ ৮৫০</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Flash Sale Counter -->
+    <section class="flash-sale" id="flash-sale">
+        <div class="flash-container">
+            <div>
+                <h2><i class="fa-solid fa-bolt text-gold"></i> লিমিটেড টাইম ফ্ল্যাশ সেল!</h2>
+                <p>মেগা মেম্বারশিপ প্যাক অফার শেষ হতে বাকি:</p>
+            </div>
+            <div class="timer" id="countdownTimer">
+                <div><span id="hours">05</span><p>ঘণ্টা</p></div>
+                <div><span id="minutes">42</span><p>মিঃ</p></div>
+                <div><span id="seconds">18</span><p>সেঃ</p></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Blog & News Section -->
+    <section class="blog-section" id="blog">
+        <div class="section-header">
+            <h2>LATEST <span>GAME UPDATES & BLOGS</span></h2>
+        </div>
+        <div class="grid-container">
+            <article class="blog-card">
+                <div class="blog-thumb"></div>
+                <div class="blog-info">
+                    <span class="category">প্যাক আপডেট</span>
+                    <h3>eFootball 2026: নতুন Epic Managers এবং তাদের টেকটিক্স</h3>
+                    <p>নতুন সিজনে গেমপ্লে পরিবর্তন এবং সেরা ম্যানেজার নির্বাচন করার বিস্তারিত গাইড।</p>
+                    <a href="#" class="read-more">আরও পড়ুন <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+            </article>
+            <article class="blog-card">
+                <div class="blog-thumb"></div>
+                <div class="blog-info">
+                    <span class="category">স্কিল গাইড</span>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- FAQ Accordion -->
+    <section class="faq-section" id="faq">
+        <div class="section-header">
+            <h2>সচরাচর <span>জিজ্ঞাসিত প্রশ্নাবলী (FAQ)</span></h2>
+        </div>
+        <div class="faq-container">
+            <div class="faq-item">
+                <div class="faq-header">কয়েন টপ-আপ করতে কি অ্যাকাউন্টের পাসওয়ার্ড লাগবে? <i class="fa-solid fa-chevron-down"></i></div>
+                <div class="faq-body">না! আমাদের সার্ভারে কয়েন টপ-আপ করার জন্য শুধুমাত্র আপনার eFootball User ID (Player ID) প্রয়োজন।</div>
+            </div>
+            <div class="faq-item">
+                <div class="faq-header">অর্ডার করার কতক্ষণ পর কয়েন পাবো? <i class="fa-solid fa-chevron-down"></i></div>
+                <div class="faq-body">সাধারণত ১ থেকে ৫ মিনিটের মধ্যে স্বয়ংক্রিয়ভাবে কয়েন যুক্ত হয়ে যায়।</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-container">
+            <div class="footer-col">
+                <a href="#" class="logo">eFOOTBALL<small class="text-blue">3D</small></a>
+                <p>বাংলাদেশের এক নম্বর প্রিমিয়াম ই-ফুটবল গেমিং পোর্টাল।</p>
+            </div>
+            <div class="footer-col">
+                <h4>পেমেন্ট মেথড</h4>
+                <div class="payment-badges">
+                    <span>bKash</span><span>Nagad</span><span>Rocket</span><span>Binance</span>
+                </div>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2026 eFootball 3D Zone. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Floating WhatsApp Button -->
+    <a href="https://wa.me/8801700000000" class="whatsapp-float" target="_blank" title="হোয়াটসঅ্যাপে মেসেজ দিন">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+
+    <!-- Order Toast Notification Widget -->
+    <div class="order-toast" id="orderToast">
+        <i class="fa-solid fa-circle-check text-neon-blue"></i>
+        <div>
+            <p id="toastUser">ঢাকা থেকে একজন ব্যবহারকারী</p>
+            <span id="toastDetails">2,130 Coins ক্রয় করেছেন</span>
+        </div>
+    </div>
+
+    <!-- JavaScript File Link -->
+    <script src="script.js"></script>
+</body>
+</html>
