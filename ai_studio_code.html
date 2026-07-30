@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eFootball 3D Zone | ব্লগ ও কয়েন টপ-আপ</title>
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Three.js CDN for 3D Effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <style>
+        /* ==========================================
+           GLOBAL & THEME VARIABLES (eFootball Neon)
+           ========================================== */
+        :root {
+            --primary: #00ffcc;
+            --secondary: #ff0055;
+            --accent-yellow: #ffcc00;
+            --bg-dark: #080b12;
+            --card-bg: rgba(16, 23, 38, 0.75);
+            --border-glow: rgba(0, 255, 204, 0.3);
+            --text-light: #f0f4f8;
+            --text-gray: #a0aec0;
+            --font-title: 'Orbitron', sans-serif;
+            --font-body: 'Hind Siliguri', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: var(--font-body);
+            overflow-x: hidden;
+        }
+
+        /* Canvas for 3D Background */
+        #webgl-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* ==========================================
+           HEADER / NAVIGATION
+           ========================================== */
+        header {
+            position: sticky;
+            top: 0;
+            width: 100%;
+            padding: 15px 8%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(8, 11, 18, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-glow);
+            z-index: 1000;
+        }
+
+        .logo {
+            font-family: var(--font-title);
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #fff;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo span {
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary);
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 25px;
+        }
+
+        nav a {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        nav a:hover, nav a.active {
+            color: var(--primary);
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            width: 0%;
+            height: 2px;
+            bottom: -5px;
+            left: 0;
+            background: var(--primary);
+            transition: 0.3s;
+            box-shadow: 0 0 8px var(--primary);
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        .nav-btn {
+            background: linear-gradient(45deg, var(--secondary), #ff5500);
+            color: #fff;
+            padding: 10px 22px;
+            border-radius: 30px;
+            font-weight: bold;
+            text-decoration: none;
+            box-shadow: 0 0 15px rgba(255, 0, 85, 0.4);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 0 25px rgba(255, 0, 85, 0.7);
+        }
+
+        /* ==========================================
+           HERO SECTION
+           ========================================== */
+        .hero {
+            min-height: 85vh;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8%;
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 600px;
+        }
+
+        .hero-badge {
+            background: rgba(0, 255, 204, 0.1);
+            color: var(--primary);
+            padding: 6px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--primary);
+            font-family: var(--font-title);
+            font-size: 0.85rem;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
+        .hero h1 {
+            font-size: 3.2rem;
+            line-height: 1.2;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
+        }
+
+        .hero h1 span {
+            color: var(--accent-yellow);
+            background: linear-gradient(to right, var(--accent-yellow), #ff9900);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            color: var(--text-gray);
+            font-size: 1.15rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .hero-btns {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, var(--primary), #0099ff);
+            color: #000;
+            font-weight: bold;
+            padding: 14px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.4);
+            transition: 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.8);
+        }
+
+        .btn-secondary {
+            border: 1px solid var(--text-gray);
+            color: var(--text-light);
+            padding: 14px 30px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        /* ==========================================
+           3D COIN TOP-UP CORNER (MAIN SPECIAL FEATURE)
+           ========================================== */
+        .topup-section {
+            padding: 80px 8%;
+            background: radial-gradient(circle at center, rgba(0,255,204,0.05) 0%, transparent 70%);
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .section-title h2 {
+            font-family: var(--font-title);
+            font-size: 2.5rem;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+
+        .section-title p {
+            color: var(--text-gray);
+            font-size: 1.1rem;
+        }
+
+        .coin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .coin-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .coin-card:hover {
+            transform: translateY(-10px) rotateX(5deg) rotateY(-5deg);
+            border-color: var(--primary);
+            box-shadow: 0 15px 35px rgba(0, 255, 204, 0.25);
+        }
+
+        .coin-card.popular {
+            border-color: var(--accent-yellow);
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.2);
+        }
+
+        .badge-popular {
+            position: absolute;
+            top: 15px;
+            right: -30px;
+            background: var(--accent-yellow);
+            color: #000;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 4px 35px;
+            transform: rotate(45deg);
+            text-transform: uppercase;
+        }
+
+        .coin-img {
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 15px;
+            background: radial-gradient(circle, rgba(255,204,0,0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: var(--accent-yellow);
+            filter: drop-shadow(0 0 10px var(--accent-yellow));
+        }
+
+        .coin-amount {
+            font-family: var(--font-title);
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .coin-bonus {
+            color: var(--primary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .coin-price {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .buy-now-btn {
+            width: 100%;
+            background: var(--primary);
+            color: #000;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .buy-now-btn:hover {
+            background: #fff;
+            box-shadow: 0 0 15px #fff;
+        }
+
+        /* Top-up Input Box */
+        .topup-form-box {
+            max-width: 650px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border: 1px solid var(--border-glow);
+            border-radius: 16px;
+            padding: 30px;
+            backdrop-filter: blur(15px);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.3);
+        }
+
+        /* ==========================================
+           BLOG SECTION
+           ========================================== */
+        .blog-section {
+            padding: 80px 8%;
+        }
+
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 35px;
+        }
+
+        .blog-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .blog-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(0, 255, 204, 0.4);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .blog-img {
+            height: 200px;
+            width: 100%;
+            object-fit: cover;
+            background-color: #1a233a;
+            position: relative;
+        }
+
+        .blog-category {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: var(--secondary);
+            color: #fff;
+            font-size: 0.8rem;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .blog-content {
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .blog-date {
+            font-size: 0.85rem;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .blog-title {
+            font-size: 1.3rem;
+            color: #fff;
+            margin-bottom: 12px;
+            line-height: 1.4;
+        }
+
+        .blog-excerpt {
+            color: var(--text-gray);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .read-more {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+
+        .read-more:hover {
+            gap: 12px;
+        }
+
+        /* ==========================================
+           FOOTER
+           ========================================== */
+        footer {
+            background: #04060a;
+            padding: 50px 8% 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 50px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-col h3 {
+            font-family: var(--font-title);
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        .footer-col ul {
+            list-style: none;
+        }
+
+        .footer-col ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-col ul a {
+            color: var(--text-gray);
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .footer-col ul a:hover {
+            color: var(--primary);
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .social-icons a {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .social-icons a:hover {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        .copyright {
+            text-align: center;
+            color: var(--text-gray);
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.9rem;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: #0f172a;
+            border: 1px solid var(--primary);
+            width: 90%;
+            max-width: 450px;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.3);
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .hero {
+                flex-direction: column;
+                text-align: center;
+                padding-top: 40px;
+            }
+            .hero h1 { font-size: 2.2rem; }
+            .hero-btns { justify-content: center; }
+            nav ul { display: none; } /* Add mobile menu as needed */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D Canvas Background -->
+    <canvas id="webgl-bg"></canvas>
+
+    <!-- Header Section -->
+    <header>
+        <div class="logo">
+            <i class="fa-solid fa-futbol"></i> eFootball <span>3D</span>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="#home" class="active">হোম</a></li>
+                <li><a href="#topup">কয়েন টপ-আপ</a></li>
+                <li><a href="#blogs">ব্লগ ও গাইড</a></li>
+                <li><a href="#about">আমাদের সম্পর্কে</a></li>
+            </ul>
+        </nav>
+        <a href="#topup" class="nav-btn"><i class="fa-solid fa-coins"></i> টপ-আপ করুন</a>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <span class="hero-badge"><i class="fa-solid fa-bolt"></i> eFootball 2026 আপডেট & শপ</span>
+            <h1>আপনার eFootball গেমপ্লেকে নিয়ে যান <span>নেক্সট লেভেলে!</span></h1>
+            <p>সেরা টেকটিক্স গাইড, প্লেয়ার রিভিউ, সাপ্তাহিক প্যাক আপডেট এবং সর্বনিম্ন দামে ১-ক্লিকে ইনস্ট্যান্ট eFootball Coin টপ-আপ সার্ভিস।</p>
+            <div class="hero-btns">
+                <a href="#topup" class="btn-primary"><i class="fa-solid fa-cart-shopping"></i> কয়েন কিনুন</a>
+                <a href="#blogs" class="btn-secondary">ব্লগ পড়ুন</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3D COIN TOP-UP CORNER (Dedicated Corner) -->
+    <section class="topup-section" id="topup">
+        <div class="section-title">
+            <h2>eFootball™ অফিশিয়াল কয়েন কর্নার</h2>
+            <p>সবচেয়ে কম খরচে এবং দ্রুততম সময়ে আপনার অ্যাকাউন্ট আইডি দিয়ে কয়েন টপ-আপ করুন</p>
+        </div>
+
+        <div class="coin-grid">
+            <!-- Pack 1 -->
+            <div class="coin-card" onclick="selectPack(130, 115)">
+                <div class="coin-img"><i class="fa-solid fa-coins"></i></div>
+                <div class="coin-amount">130 Coins</div>
+                <div class="coin-bonus">+১০ বোনাস কয়েন</div>
+                <div class="coin-price">৳ ১১৫</div>
+                <button class="buy-now-btn">অর্ডার করুন</button>
+            </div>
+
+            <!-- Pack 2 -->
+            <div class="coin-card popular" onclick="selectPack(520, 450)">
+                <div class="badge-popular">সেরা ডিল</div>
+                <div class="coin-img"><i class="fa-solid fa-coins"></i></div>
+                <div class="coin-amount">520 Coins</div>
+                <div class="coin-bonus">+৫০ বোনাস কয়েন</div>
+                <div class="coin-price">৳ ৪৫০</div>
+                <button class="buy-now-btn">অর্ডার করুন</button>
+            </div>
+
+            <!-- Pack 3 -->
+            <div class="coin-card" onclick="selectPack(1050, 890)">
+                <div class="coin-img"><i class="fa-solid fa-coins"></i></div>
+                <div class="coin-amount">1,050 Coins</div>
+                <div class="coin-bonus">+১০০ বোনাস কয়েন</div>
+                <div class="coin-price">৳ ৮৯০</div>
+                <button class="buy-now-btn">অর্ডার করুন</button>
+            </div>
+
+            <!-- Pack 4 -->
+            <div class="coin-card" onclick="selectPack(2130, 1780)">
+                <div class="coin-img"><i class="fa-solid fa-coins"></i></div>
+                <div class="coin-amount">2,130 Coins</div>
+                <div class="coin-bonus">+২০০ বোনাস কয়েন</div>
+                <div class="coin-price">৳ ১,৭৮০</div>
+                <button class="buy-now-btn">অর্ডার করুন</button>
+            </div>
+        </div>
+
+        <!-- Top-up User Form -->
+        <div class="topup-form-box">
+            <h3 style="color: var(--primary); margin-bottom: 20px; text-align: center; font-family: var(--font-title);">ইনস্ট্যান্ট অর্ডার ফর্ম</h3>
+            <form id="topupForm" onsubmit="handleCheckout(event)">
+                <div class="form-group">
+                    <label><i class="fa-solid fa-user"></i> eFootball User ID (eFootball ID / Konami ID):</label>
+                    <input type="text" class="form-control" placeholder="উদাহরণ: 123-456-789" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fa-solid fa-gamepad"></i> আপনার প্ল্যাটফর্ম:</label>
+                    <select class="form-control">
+                        <option>Android (Google Play)</option>
+                        <option>iOS (iPhone/iPad)</option>
+                        <option>PC / Steam</option>
+                        <option>Console (PlayStation / Xbox)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><i class="fa-solid fa-wallet"></i> পেমেন্ট মেথড:</label>
+                    <select class="form-control" id="paymentMethod">
+                        <option>bKash (বিক্যাশ পার্সোনাল)</option>
+                        <option>Nagad (নগদ পার্সোনাল)</option>
+                        <option>Rocket (রকেট)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; font-size: 1.1rem; cursor: pointer;">পেমেন্ট সম্পূর্ণ করুন</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- BLOG SECTION -->
+    <section class="blog-section" id="blogs">
+        <div class="section-title">
+            <h2>সর্বশেষ eFootball ব্লগ ও ট্রিকস</h2>
+            <p>আপনার গেমপ্ল্যান ও স্কিল উন্নত করার জন্য গাইডসমূহ পড়ুন</p>
+        </div>
+
+        <div class="blog-grid">
+            <!-- Article 1 -->
+            <article class="blog-card">
+                <div class="blog-img">
+                    <span class="blog-category">গাইড & ট্রিকস</span>
+                </div>
+                <div class="blog-content">
+                    <div class="blog-date"><i class="fa-regular fa-calendar"></i> ২৪ জুলাই, ২০২৬</div>
+                    <h3 class="blog-title">eFootball 2026: সেরা ম্যানেজার ও ফরমেশন গাইড</h3>
+                    <p class="blog-excerpt">ডিভিশন ১-এ র‍্যাংক পুশ করার জন্য কোন ফরমেশন এবং ম্যানেজার প্লে-স্টাইল সবচেয়ে কার্যকর? বিস্তারিত জেনে নিন।</p>
+                    <a href="#" class="read-more">সম্পূর্ণ পড়ুন <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+            </article>
+
+            <!-- Article 2 -->
+            <article class="blog-card">
+                <div class="blog-img">
+                    <span class="blog-category">প্লেয়ার রিভিউ</span>
+                </div>
+                <div class="blog-content">
+                    <div class="blog-date"><i class="fa-regular fa-calendar"></i> ২২ জুলাই, ২০২৬</div>
+                    <h3 class="blog-title">Epic Lionel Messi: 108 Max Rating কাস্টম ট্রেনিং গাইড</h3>
+                    <p class="blog-excerpt">মেসি কার্ডটির সর্বোচ্চ ড্রিবলিং এবং শ্যুটিং অ্যাবিলিটি আনলক করার সঠিক স্ট্যাট ডিস্ট্রিবিউশন গাইড।</p>
+                    <a href="#" class="read-more">সম্পূর্ণ পড়ুন <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+            </article>
+
+            <!-- Article 3 -->
+            <article class="blog-card">
+                <div class="blog-img">
+                    <span class="blog-category">কয়েন গাইড</span>
+                </div>
+                <div class="blog-content">
+                    <div class="blog-date"><i class="fa-regular fa-calendar"></i> ২০ জুলাই, ২০২৬</div>
+                    <h3 class="blog-title">প্রতি সপ্তাহে ফ্রিতে ৫০০+ eFootball Coin পাওয়ার উপায়</h3>
+                    <p class="blog-excerpt">কনামি ইভেন্ট, অনলাইন ট্যুরনামেন্ট এবং উইকলি মিশন সম্পূর্ণ করে ফ্রিতে কয়েন জিতার নিয়ম।</p>
+                    <a href="#" class="read-more">সম্পূর্ণ পড়ুন <i class="fa-solid fa-arrow-right"></i></a>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-col">
+                <h3>eFootball 3D Zone</h3>
+                <p style="color: var(--text-gray); font-size: 0.95rem; line-height: 1.6;">বাংলাদেশের সবচেয়ে বিশ্বাসযোগ্য এবং দ্রুততম eFootball টপ-আপ এবং গেমিং কমিউনিটি পোর্টাল।</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#"><i class="fa-brands fa-youtube"></i></a>
+                    <a href="#"><i class="fa-brands fa-discord"></i></a>
+                    <a href="#"><i class="fa-brands fa-whatsapp"></i></a>
+                </div>
+            </div>
+            <div class="footer-col">
+                <h3>দ্রুত লিঙ্ক</h3>
+                <ul>
+                    <li><a href="#home">হোম পেজ</a></li>
+                    <li><a href="#topup">কয়েন প্যাকেজ</a></li>
+                    <li><a href="#blogs">গেমিং ব্লগ</a></li>
+                    <li><a href="#">কাস্টমার সাপোর্ট</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h3>যোগাযোগ</h3>
+                <ul>
+                    <li><i class="fa-solid fa-envelope"></i> support@efootball3d.com</li>
+                    <li><i class="fa-solid fa-phone"></i> +880 1700-000000</li>
+                    <li><i class="fa-solid fa-location-dot"></i> ঢাকা, বাংলাদেশ</li>
+                </ul>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2026 eFootball 3D Zone. All Rights Reserved. Not affiliated with Konami Digital Entertainment.</p>
+        </div>
+    </footer>
+
+    <!-- Order Modal -->
+    <div class="modal" id="orderModal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <i class="fa-solid fa-circle-check" style="font-size: 3.5rem; color: var(--primary); margin-bottom: 15px;"></i>
+            <h3 style="color: #fff; margin-bottom: 10px;">অর্ডার সফল হয়েছে!</h3>
+            <p id="modalMsg" style="color: var(--text-gray); font-size: 0.95rem; line-height: 1.5;"></p>
+            <button class="buy-now-btn" style="margin-top: 20px;" onclick="closeModal()">ঠিক আছে</button>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         JAVASCRIPT & THREE.JS 3D BACKGROUND LOGIC
+         ========================================== -->
+    <script>
+        /* ----------------------------------------------------
+           1. THREE.JS 3D BACKGROUND ANIMATION (Particles & 3D Gold Coin)
+           ---------------------------------------------------- */
+        const canvas = document.getElementById('webgl-bg');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+
+        // Particle Background
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 700;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        for(let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 15;
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.025,
+            color: 0x00ffcc,
+            transparent: true,
+            opacity: 0.8
+        });
+
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        // 3D Metallic Floating Coin/Cylinder
+        const coinGeometry = new THREE.CylinderGeometry(1.2, 1.2, 0.15, 32);
+        const coinMaterial = new THREE.MeshStandardMaterial({
+            color: 0xffcc00,
+            metalness: 0.8,
+            roughness: 0.2
+        });
+        const coin3D = new THREE.Mesh(coinGeometry, coinMaterial);
+        coin3D.position.set(2.5, 0, -2);
+        coin3D.rotation.x = Math.PI / 3;
+        scene.add(coin3D);
+
+        // Lighting for 3D Mesh
+        const pointLight = new THREE.PointLight(0xffffff, 1);
+        pointLight.position.set(5, 5, 5);
+        scene.add(pointLight);
+
+        const ambientLight = new THREE.AmbientLight(0x00ffcc, 0.5);
+        scene.add(ambientLight);
+
+        camera.position.z = 5;
+
+        // Mouse Interactivity
+        let mouseX = 0;
+        let mouseY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = (e.clientX / window.innerWidth) - 0.5;
+            mouseY = (e.clientY / window.innerHeight) - 0.5;
+        });
+
+        // Animation Loop
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Rotate 3D Coin
+            coin3D.rotation.z += 0.01;
+            coin3D.rotation.y += 0.005;
+
+            // Rotate Particles slightly
+            particlesMesh.rotation.y = mouseX * 0.5;
+            particlesMesh.rotation.x = -mouseY * 0.5;
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Responsive Window Resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        /* ----------------------------------------------------
+           2. INTERACTIVE TOP-UP & FORM LOGIC
+           ---------------------------------------------------- */
+        let selectedCoinAmount = 520;
+        let selectedCoinPrice = 450;
+
+        function selectPack(amount, price) {
+            selectedCoinAmount = amount;
+            selectedCoinPrice = price;
+            
+            // Scroll to form smooth
+            document.querySelector('.topup-form-box').scrollIntoView({ behavior: 'smooth' });
+            
+            alert(`আপনি ${amount} eFootball Coins (৳${price}) সিলেক্ট করেছেন। নিচে আপনার ID দিয়ে অর্ডার সাবমিট করুন।`);
+        }
+
+        function handleCheckout(e) {
+            e.preventDefault();
+            const payMethod = document.getElementById('paymentMethod').value;
+            const modal = document.getElementById('orderModal');
+            const modalMsg = document.getElementById('modalMsg');
+
+            modalMsg.innerHTML = `আপনার <strong>${selectedCoinAmount} Coins</strong>-এর অর্ডারটি গ্রহণ করা হয়েছে!<br>মোট মূল্য: <strong>৳${selectedCoinPrice}</strong> (${payMethod})<br>পরবর্তী ৫-১০ মিনিটের মধ্যে কয়েন আপনার অ্যাকাউন্টে যোগ হবে।`;
+            
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('orderModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
