@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: #060913;
+    color: #f1f5f9;
+  }
+
+  h1, h2, h3, .font-heading {
+    font-family: 'Orbitron', 'Rajdhani', sans-serif;
+  }
+
+  .font-tech {
+    font-family: 'Rajdhani', sans-serif;
+  }
+}
+
+/* Custom PlayStation & eFootball Neon Glow Utilities */
+.neon-glow-blue {
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.35), 0 0 40px rgba(0, 102, 255, 0.2);
+}
+
+.neon-glow-gold {
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4), 0 0 35px rgba(255, 165, 0, 0.2);
+}
+
+.neon-glow-green {
+  box-shadow: 0 0 18px rgba(16, 185, 129, 0.4);
+}
+
+.text-glow-cyan {
+  text-shadow: 0 0 12px rgba(0, 240, 255, 0.7);
+}
+
+.text-glow-gold {
+  text-shadow: 0 0 12px rgba(255, 215, 0, 0.8);
+}
+
+.glass-panel {
+  background: rgba(13, 20, 38, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 240, 255, 0.15);
+}
+
+.glass-card {
+  background: linear-gradient(135deg, rgba(16, 24, 48, 0.8) 0%, rgba(10, 15, 30, 0.9) 100%);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(0, 240, 255, 0.4);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px -10px rgba(0, 240, 255, 0.25);
+}
+
+.gold-gradient-text {
+  background: linear-gradient(135deg, #FFF099 0%, #FFD700 40%, #FFA500 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.cyan-blue-gradient-text {
+  background: linear-gradient(135deg, #00F0FF 0%, #0072FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #060913;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 240, 255, 0.2);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00F0FF;
+}
+
+/* Animated Border Glow */
+@keyframes borderPulse {
+  0%, 100% { border-color: rgba(0, 240, 255, 0.3); }
+  50% { border-color: rgba(255, 215, 0, 0.6); }
+}
+
+.animate-border-pulse {
+  animation: borderPulse 4s infinite ease-in-out;
+}
+
+/* Scanline Effect */
+.scanline {
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(255,255,255,0) 50%,
+    rgba(0, 240, 255, 0.04) 50%,
+    rgba(0, 240, 255, 0.04)
+  );
+  background-size: 100% 4px;
+}
