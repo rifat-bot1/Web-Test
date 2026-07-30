@@ -1,0 +1,8 @@
+{
+  "name": "Remix eFootball Coin Hub",
+  "description": "Premium eFootball Coins \u0026 Account Top-Up Store with Instant Delivery",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
