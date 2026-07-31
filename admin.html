@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>eFootball অ্যাডমিন প্যানেল</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* ===== গ্লোবাল স্টাইল ===== */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0b0e14;
+      color: #f0f4fa;
+      min-height: 100vh;
+      display: flex;
+    }
+    a { text-decoration:none; color:inherit; }
+
+    /* ===== সাইডবার (ডেস্কটপ) ===== */
+    .sidebar {
+      width: 240px;
+      background: rgba(20, 24, 34, 0.95);
+      backdrop-filter: blur(16px);
+      border-right: 1px solid rgba(255,255,255,0.04);
+      padding: 20px 0;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      overflow-y: auto;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease;
+    }
+    .sidebar .logo {
+      font-size: 20px;
+      font-weight: 800;
+      padding: 0 20px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .sidebar .logo i { color: #00b4ff; }
+    .sidebar .logo span { background: linear-gradient(135deg, #00b4ff, #7b2ffc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+    .sidebar .nav-item {
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: #8892a8;
+      font-weight: 500;
+      font-size: 14px;
+      cursor: pointer;
+      transition: 0.2s;
+      border-left: 3px solid transparent;
+    }
+    .sidebar .nav-item:hover { background: rgba(255,255,255,0.03); color: #fff; }
+    .sidebar .nav-item.active {
+      background: rgba(0,180,255,0.06);
+      color: #00b4ff;
+      border-left-color: #00b4ff;
+    }
+    .sidebar .nav-item i { width: 20px; text-align: center; }
+
+    .sidebar .user-info {
+      margin-top: auto;
+      padding: 16px 20px;
+      border-top: 1px solid rgba(255,255,255,0.04);
+      font-size: 13px;
+      color: #8892a8;
+    }
+    .sidebar .user-info .email { color: #fff; font-weight: 600; }
+    .sidebar .logout-btn {
+      margin-top: 8px;
+      padding: 8px 16px;
+      background: rgba(255,51,102,0.1);
+      border: 1px solid rgba(255,51,102,0.15);
+      border-radius: 8px;
+      color: #ff6b6b;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: 0.2s;
+      width: 100%;
+    }
+    .sidebar .logout-btn:hover { background: rgba(255,51,102,0.15); }
+
+    /* ===== মোবাইলের জন্য সাইডবার টগল ===== */
+    .sidebar-toggle {
+      display: none;
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 1001;
+      background: rgba(20,24,34,0.8);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 8px 10px;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
+    }
+
+    /* ===== প্রধান কন্টেন্ট ===== */
+    .main {
+      flex: 1;
+      padding: 24px 32px;
+      overflow-y: auto;
+      max-height: 100vh;
+    }
+    .main-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .main-header h1 { font-size: 26px; font-weight: 800; }
+    .main-header .badge {
+      background: rgba(0,180,255,0.08);
+      border: 1px solid rgba(0,180,255,0.1);
+      padding: 4px 16px;
+      border-radius: 40px;
+      font-size: 12px;
+      color: #00b4ff;
+    }
+
+    /* ===== পেজ সেকশন ===== */
+    .page-section { display: none; animation: fadeIn 0.3s ease; }
+    .page-section.active { display: block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+
+    /* ===== কার্ড ===== */
+    .glass-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 20px;
+      transition: 0.2s;
+      margin-bottom: 20px;
+    }
+    .glass-card:hover { border-color: rgba(255,255,255,0.08); }
+
+    /* ===== স্ট্যাট গ্রিড ===== */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card { text-align: center; padding: 16px; }
+    .stat-card .num { font-size: 28px; font-weight: 800; color: #00b4ff; font-family: 'Orbitron', monospace; }
+    .stat-card .label { font-size: 13px; color: #8892a8; margin-top: 4px; }
+
+    /* ===== টেবিল ===== */
+    .table-wrapper { overflow-x: auto; margin-top: 12px; }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 600px;
+    }
+    .data-table th {
+      text-align: left;
+      padding: 10px 12px;
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      color: #8892a8;
+      font-weight: 600;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .data-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      vertical-align: middle;
+    }
+    .data-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* ===== ফর্ম ===== */
+    .form-group { margin-bottom: 14px; }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #8892a8;
+      margin-bottom: 4px;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      transition: 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus {
+      border-color: #00b4ff;
+      background: rgba(255,255,255,0.06);
+    }
+    .form-group select option { background: #1a1e2a; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+    /* ===== বাটন ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 13px;
+      border: none;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #00b4ff, #7b2ffc);
+      color: #fff;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,180,255,0.2); }
+    .btn-danger {
+      background: rgba(255,51,102,0.12);
+      color: #ff6b6b;
+      border: 1px solid rgba(255,51,102,0.1);
+    }
+    .btn-danger:hover { background: rgba(255,51,102,0.2); }
+    .btn-success {
+      background: rgba(0,255,136,0.1);
+      color: #8affc4;
+      border: 1px solid rgba(0,255,136,0.08);
+    }
+    .btn-success:hover { background: rgba(0,255,136,0.15); }
+    .btn-sm { padding: 4px 12px; font-size: 11px; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #8892a8;
+    }
+    .btn-outline:hover { border-color: #00b4ff; color: #fff; }
+    .btn-block { width: 100%; justify-content: center; }
+
+    .action-btns { display: flex; gap: 4px; flex-wrap: wrap; }
+
+    /* ===== মোডাল ===== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: #1a1e2a;
+      padding: 24px;
+      border-radius: 16px;
+      max-width: 500px;
+      width: 100%;
+      margin: 16px;
+      border: 1px solid rgba(255,255,255,0.06);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-box h2 { margin-bottom: 16px; font-size: 20px; }
+    .modal-close {
+      float: right;
+      background: none;
+      border: none;
+      color: #8892a8;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    .modal-close:hover { color: #fff; }
+
+    /* ===== লগইন পেজ ===== */
+    .login-page {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: #0b0e14;
+      width: 100%;
+    }
+    .login-box {
+      background: #1a1e2a;
+      padding: 32px 24px;
+      border-radius: 20px;
+      max-width: 400px;
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .login-box h1 { text-align: center; margin-bottom: 12px; font-size: 24px; }
+    .login-box h1 i { color: #00b4ff; }
+    .login-box .sub { text-align: center; color: #8892a8; font-size: 14px; margin-bottom: 20px; }
+    .login-box .btn { width: 100%; justify-content: center; }
+    .login-error { color: #ff6b6b; font-size: 13px; margin-top: 8px; display: none; text-align: center; }
+    .login-success { color: #8affc4; font-size: 13px; margin-top: 8px; display: none; text-align: center; }
+
+    /* ===== টোস্ট ===== */
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-width: 360px;
+    }
+    .toast {
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: rgba(11,14,20,0.95);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: #fff;
+      font-size: 13px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      animation: slideIn 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .toast.success { border-color: rgba(0,255,136,0.2); }
+    .toast.success i { color: #8affc4; }
+    .toast.error { border-color: rgba(255,51,102,0.2); }
+    .toast.error i { color: #ff6b6b; }
+    @keyframes slideIn { from{opacity:0;transform:translateX(30px);} to{opacity:1;transform:translateX(0);} }
+    .toast-out { animation: slideOut 0.3s ease forwards; }
+    @keyframes slideOut { to{opacity:0;transform:translateX(30px);} }
+
+    /* ===== লোডার ===== */
+    .loader { text-align:center; padding:20px; color:#8892a8; }
+    .loader i { font-size:20px; animation:spin 0.8s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg);} }
+
+    /* ===== মোবাইল ফ্রেন্ডলি ===== */
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed;
+        top: 0;
+        left: -260px;
+        width: 260px;
+        height: 100vh;
+        z-index: 1000;
+        transition: left 0.3s ease;
+        background: rgba(11,14,20,0.98);
+        backdrop-filter: blur(20px);
+        border-right: 1px solid var(--border);
+      }
+      .sidebar.open { left: 0; }
+      .sidebar-overlay.open { display: block; }
+      .sidebar-toggle { display: block; }
+      .main {
+        padding: 16px;
+        padding-top: 60px;
+      }
+      .stat-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .stat-card .num { font-size: 22px; }
+      .form-row { grid-template-columns: 1fr; }
+      .main-header h1 { font-size: 20px; }
+    }
+    @media (max-width: 480px) {
+      .stat-grid { grid-template-columns: 1fr; }
+      .data-table { font-size: 12px; min-width: 400px; }
+      .data-table th, .data-table td { padding: 6px 8px; }
+      .modal-box { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== লগইন পেজ ===== -->
+  <div class="login-page" id="loginPage">
+    <div class="login-box">
+      <h1><i class="fas fa-futbol"></i> eFootball অ্যাডমিন</h1>
+      <p class="sub">আপনার ইমেইলে একটি লগইন লিংক পাঠানো হবে</p>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>ইমেইল</label>
+          <input type="email" id="loginEmail" placeholder="admin@example.com" required />
+        </div>
+        <div class="login-error" id="loginError">ইমেইল পাঠাতে সমস্যা হয়েছে</div>
+        <div class="login-success" id="loginSuccess"><i class="fas fa-check-circle"></i> লিংক পাঠানো হয়েছে! আপনার ইমেইল চেক করুন।</div>
+        <button type="submit" class="btn btn-primary" id="loginBtn">লগইন লিংক পাঠান</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== অ্যাডমিন ড্যাশবোর্ড ===== -->
+  <div id="adminApp" style="display:none; width:100%;">
+
+    <!-- সাইডবার -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <button class="sidebar-toggle" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+
+    <div class="sidebar" id="sidebar">
+      <div class="logo"><i class="fas fa-futbol"></i> <span>Admin</span></div>
+      <div class="nav-item active" data-page="dashboard"><i class="fas fa-chart-pie"></i> <span>ড্যাশবোর্ড</span></div>
+      <div class="nav-item" data-page="orders"><i class="fas fa-shopping-cart"></i> <span>অর্ডার</span></div>
+      <div class="nav-item" data-page="users"><i class="fas fa-users"></i> <span>ইউজার</span></div>
+      <div class="nav-item" data-page="products"><i class="fas fa-box"></i> <span>প্রোডাক্ট</span></div>
+      <div class="nav-item" data-page="coupons"><i class="fas fa-ticket"></i> <span>কুপন</span></div>
+      <div class="nav-item" data-page="admins"><i class="fas fa-user-shield"></i> <span>অ্যাডমিন</span></div>
+      <div class="user-info">
+        <div class="email" id="adminEmail">admin@example.com</div>
+        <div style="font-size:12px;margin-top:2px;color:#8affc4;">✅ অ্যাডমিন</div>
+        <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> লগআউট</button>
+      </div>
+    </div>
+
+    <!-- প্রধান কন্টেন্ট -->
+    <div class="main">
+
+      <!-- ===== ড্যাশবোর্ড ===== -->
+      <div class="page-section active" data-page="dashboard">
+        <div class="main-header">
+          <h1>ড্যাশবোর্ড</h1>
+          <span class="badge"><i class="fas fa-circle" style="color:#8affc4;font-size:8px;"></i> লাইভ</span>
+        </div>
+        <div class="stat-grid" id="dashboardStats">
+          <div class="stat-card glass-card"><div class="num" id="statTotalOrders">0</div><div class="label">মোট অর্ডার</div></div>
+          <div class="stat-card glass-card"><div class="num" id="statTotalUsers">0</div><div class="label">মোট ইউজার</div></div>
+          <div class="stat-card glass-card"><div class="num" id="statRevenue">$০</div><div class="label">মোট আয়</div></div>
+          <div class="stat-card glass-card"><div class="num" id="statPendingOrders">0</div><div class="label">পেন্ডিং অর্ডার</div></div>
+        </div>
+        <div class="glass-card">
+          <h3 style="margin-bottom:12px;">সাম্প্রতিক অর্ডার</h3>
+          <div id="recentOrders"><div class="loader"><i class="fas fa-spinner"></i> লোড হচ্ছে...</div></div>
+        </div>
+      </div>
+
+      <!-- ===== অর্ডার ===== -->
+      <div class="page-section" data-page="orders">
+        <div class="main-header">
+          <h1>অর্ডার ম্যানেজমেন্ট</h1>
+          <button class="btn btn-primary btn-sm" id="refreshOrders"><i class="fas fa-sync-alt"></i> রিফ্রেশ</button>
+        </div>
+        <div class="glass-card">
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead><tr><th>অর্ডার আইডি</th><th>প্লেয়ার</th><th>ইউজার</th><th>প্যাকেজ</th><th>মোট</th><th>স্ট্যাটাস</th><th>অ্যাকশন</th></tr></thead>
+              <tbody id="ordersTableBody"><tr><td colspan="7" class="loader"><i class="fas fa-spinner"></i> লোড হচ্ছে...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ইউজার ===== -->
+      <div class="page-section" data-page="users">
+        <div class="main-header">
+          <h1>ইউজার ম্যানেজমেন্ট</h1>
+          <button class="btn btn-primary btn-sm" id="addUserBtn"><i class="fas fa-plus"></i> নতুন ইউজার</button>
+        </div>
+        <div class="glass-card">
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead><tr><th>ইমেইল</th><th>সাইন-আপ তারিখ</th><th>অর্ডার সংখ্যা</th><th>অ্যাকশন</th></tr></thead>
+              <tbody id="usersTableBody"><tr><td colspan="4" class="loader"><i class="fas fa-spinner"></i> লোড হচ্ছে...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== প্রোডাক্ট ===== -->
+      <div class="page-section" data-page="products">
+        <div class="main-header">
+          <h1>প্রোডাক্ট ম্যানেজমেন্ট</h1>
+          <button class="btn btn-primary btn-sm" id="addProductBtn"><i class="fas fa-plus"></i> নতুন প্যাকেজ</button>
+        </div>
+        <div class="glass-card">
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead><tr><th>কোড</th><th>নাম</th><th>কয়েন</th><th>দাম</th><th>বোনাস</th><th>জনপ্রিয়</th><th>অ্যাকশন</th></tr></thead>
+              <tbody id="productsTableBody"><tr><td colspan="7" class="loader"><i class="fas fa-spinner"></i> লোড হচ্ছে...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== কুপন ===== -->
+      <div class="page-section" data-page="coupons">
+        <div class="main-header">
+          <h1>কুপন ম্যানেজমেন্ট</h1>
+          <button class="btn btn-primary btn-sm" id="addCouponBtn"><i class="fas fa-plus"></i> নতুন কুপন</button>
+        </div>
+        <div class="glass-card">
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead><tr><th>কোড</th><th>বিবরণ</th><th>ডিসকাউন্ট</th><th>ভ্যালিড</th><th>সক্রিয়</th><th>অ্যাকশন</th></tr></thead>
+              <tbody id="couponsTableBody"><tr><td colspan="6" class="loader"><i class="fas fa-spinner"></i> লোড হচ্ছে...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== অ্যাডমিন ===== -->
+      <div class="page-section" data-page="admins">
+        <div class="main-header">
+          <h1>অ্যাডমিন ম্যানেজমেন্ট</h1>
+          <button class="btn btn-primary btn-sm" id="addAdminBtn"><i class="fas fa-plus"></i> নতুন অ্যাডমিন</button>
+        </div>
+        <div class="glass-card">
+          <div class="table-wrapper">
+            <table class="data-table">
+              <thead><tr><th>ইমেইল</th><th>অ্যাকশন</th></tr></thead>
+              <tbody id="adminsTableBody"><tr><td colspan="2" class="loader"><i class="fas fa-spinner"></i> লোড হচ্ছে...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ===== টোস্ট ===== -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ===== মোডাল ===== -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+      <button class="modal-close" id="modalClose"><i class="fas fa-times"></i></button>
+      <h2 id="modalTitle">শিরোনাম</h2>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+  জাভাস্ক্রিপ্ট – ম্যাজিক লিংক লগইন + সম্পূর্ণ অ্যাডমিন
+  ============================================================ -->
+  <script>
+    (function() {
+      'use strict';
+
+      // ===== ১. Supabase ক্লায়েন্ট =====
+      const SUPABASE_URL = 'https://fzvauuvwpgmfvkwqqivf.supabase.co';
+      const SUPABASE_ANON_KEY = 'sb_publishable_rWY_zm_V4vij_-dYwwmKSg_BV0voJRw';
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      // ===== ২. টোস্ট =====
+      function showToast(msg, type = 'info', duration = 4000) {
+        const c = document.getElementById('toastContainer');
+        const t = document.createElement('div');
+        t.className = `toast ${type}`;
+        const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
+        t.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i> ${msg}`;
+        c.appendChild(t);
+        setTimeout(() => { t.classList.add('toast-out'); setTimeout(() => t.remove(), 300); }, duration);
+      }
+
+      // ===== ৩. DOM রেফারেন্স =====
+      const loginPage = document.getElementById('loginPage');
+      const adminApp = document.getElementById('adminApp');
+      const loginForm = document.getElementById('loginForm');
+      const loginError = document.getElementById('loginError');
+      const loginSuccess = document.getElementById('loginSuccess');
+      const loginBtn = document.getElementById('loginBtn');
+
+      // ===== ৪. ম্যাজিক লিংক লগইন =====
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('loginEmail').value.trim();
+        loginError.style.display = 'none';
+        loginSuccess.style.display = 'none';
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'পাঠানো হচ্ছে...';
+
+        try {
+          // প্রথমে চেক করুন এই ইমেইল অ্যাডমিন কিনা
+          const { data: adminData, error: adminError } = await supabase
+            .from('admins')
+            .select('email')
+            .eq('email', email)
+            .single();
+
+          if (adminError || !adminData) {
+            loginError.textContent = 'এই ইমেইল অ্যাডমিন নয়';
+            loginError.style.display = 'block';
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'লগইন লিংক পাঠান';
+            return;
+          }
+
+          // ম্যাজিক লিংক পাঠান
+          const { error } = await supabase.auth.signInWithOtp({
+            email: email,
+            options: {
+              emailRedirectTo: window.location.origin + window.location.pathname,
+            },
+          });
+
+          if (error) throw error;
+
+          loginSuccess.style.display = 'block';
+          loginBtn.textContent = 'পুনরায় পাঠান';
+          showToast('লিংক পাঠানো হয়েছে! আপনার ইমেইল চেক করুন।', 'success');
+
+        } catch (err) {
+          loginError.textContent = err.message || 'ইমেইল পাঠাতে সমস্যা হয়েছে';
+          loginError.style.display = 'block';
+        }
+        loginBtn.disabled = false;
+        // button text will be reset after success, but we keep it as "পুনরায় পাঠান"
+      });
+
+      // ===== ৫. লগআউট =====
+      document.getElementById('logoutBtn').addEventListener('click', async () => {
+        await supabase.auth.signOut();
+        location.reload();
+      });
+
+      // ===== ৬. অ্যাডমিন অ্যাপ লোড =====
+      let currentAdminEmail = '';
+
+      function loadAdminApp(user) {
+        loginPage.style.display = 'none';
+        adminApp.style.display = 'flex';
+        currentAdminEmail = user.email;
+        document.getElementById('adminEmail').textContent = user.email;
+
+        // সব ডেটা লোড
+        loadDashboard();
+        loadOrders();
+        loadUsers();
+        loadProducts();
+        loadCoupons();
+        loadAdmins();
+
+        // নেভিগেশন
+        document.querySelectorAll('.nav-item').forEach(item => {
+          item.addEventListener('click', function() {
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            this.classList.add('active');
+            const page = this.dataset.page;
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+            const target = document.querySelector(`.page-section[data-page="${page}"]`);
+            if (target) target.classList.add('active');
+            closeSidebar();
+          });
+        });
+
+        // রিফ্রেশ বাটন
+        document.getElementById('refreshOrders').addEventListener('click', loadOrders);
+
+        // সাইডবার টগল
+        document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
+        document.getElementById('sidebarOverlay').addEventListener('click', closeSidebar);
+
+        // অ্যাডমিন পৃষ্ঠা শুধু সুপার অ্যাডমিনের জন্য
+        if (currentAdminEmail !== 'mohammaddrifat.edu@gmail.com') {
+          document.querySelector('[data-page="admins"]').style.display = 'none';
+        }
+      }
+
+      function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('open');
+        document.getElementById('sidebarOverlay').classList.toggle('open');
+      }
+
+      function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('sidebarOverlay').classList.remove('open');
+      }
+
+      // ===== ৭. ড্যাশবোর্ড =====
+      async function loadDashboard() {
+        try {
+          const { count: totalOrders } = await supabase.from('orders').select('*', { count: 'exact', head: true });
+          const { count: delivered } = await supabase.from('orders').select('*', { count: 'exact', head: true })
+            .eq('status', 'delivered');
+          const { count: pending } = await supabase.from('orders').select('*', { count: 'exact', head: true })
+            .eq('status', 'pending');
+
+          const { data: revenueData } = await supabase
+            .from('orders')
+            .select('final_amount')
+            .eq('status', 'delivered');
+          const revenue = revenueData ? revenueData.reduce((s, o) => s + (o.final_amount || 0), 0) : 0;
+
+          const { data: userData } = await supabase.from('orders').select('user_email');
+          const uniqueUsers = new Set(userData ? userData.map(o => o.user_email) : []);
+          const totalUsers = uniqueUsers.size;
+
+          document.getElementById('statTotalOrders').textContent = totalOrders || 0;
+          document.getElementById('statTotalUsers').textContent = totalUsers;
+          document.getElementById('statRevenue').textContent = '$' + revenue.toFixed(2);
+          document.getElementById('statPendingOrders').textContent = pending || 0;
+
+          const { data: recent } = await supabase
+            .from('orders')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(5);
+          const container = document.getElementById('recentOrders');
+          if (!recent || recent.length === 0) {
+            container.innerHTML = '<p style="color:#8892a8;">কোনো অর্ডার নেই</p>';
+          } else {
+            container.innerHTML = recent.map(o => `
+              <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03);">
+                <span><strong>${o.order_id}</strong> - ${o.package_name}</span>
+                <span>$${(o.final_amount || o.total_amount).toFixed(2)} <span class="status-badge" style="background:rgba(0,255,136,0.1);color:#8affc4;padding:2px 10px;border-radius:30px;font-size:11px;">${o.status}</span></span>
+              </div>
+            `).join('');
+          }
+        } catch (e) { console.error(e); }
+      }
+
+      // ===== ৮. অর্ডার =====
+      async function loadOrders() {
+        const tbody = document.getElementById('ordersTableBody');
+        const { data, error } = await supabase.from('orders').select('*').order('created_at', { ascending: false });
+        if (error) { tbody.innerHTML = `<tr><td colspan="7">${error.message}</td></tr>`; return; }
+        if (!data || data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:#8892a8;">কোনো অর্ডার নেই</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = data.map(o => `
+          <tr>
+            <td><strong>${o.order_id}</strong></td>
+            <td>${o.player_id}</td>
+            <td>${o.username || '-'}</td>
+            <td>${o.package_name}</td>
+            <td>$${(o.final_amount || o.total_amount).toFixed(2)}</td>
+            <td>
+              <select class="order-status-select" data-id="${o.id}" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:6px;padding:4px 8px;color:#fff;font-size:12px;">
+                <option value="pending" ${o.status==='pending'?'selected':''}>Pending</option>
+                <option value="processing" ${o.status==='processing'?'selected':''}>Processing</option>
+                <option value="delivered" ${o.status==='delivered'?'selected':''}>Delivered</option>
+                <option value="cancelled" ${o.status==='cancelled'?'selected':''}>Cancelled</option>
+              </select>
+            </td>
+            <td>
+              <button class="btn btn-danger btn-sm delete-order" data-id="${o.id}"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>
+        `).join('');
+
+        // স্ট্যাটাস চেঞ্জ
+        document.querySelectorAll('.order-status-select').forEach(sel => {
+          sel.addEventListener('change', async function() {
+            const id = parseInt(this.dataset.id);
+            const status = this.value;
+            const { error } = await supabase.from('orders').update({ status }).eq('id', id);
+            if (error) { showToast(error.message, 'error'); return; }
+            showToast('স্ট্যাটাস আপডেট হয়েছে', 'success');
+            loadOrders();
+            loadDashboard();
+          });
+        });
+
+        // ডিলিট
+        document.querySelectorAll('.delete-order').forEach(btn => {
+          btn.addEventListener('click', async function() {
+            if (!confirm('অর্ডারটি ডিলিট করবেন?')) return;
+            const id = parseInt(this.dataset.id);
+            const { error } = await supabase.from('orders').delete().eq('id', id);
+            if (error) { showToast(error.message, 'error'); return; }
+            showToast('অর্ডার ডিলিট করা হয়েছে', 'success');
+            loadOrders();
+            loadDashboard();
+          });
+        });
+      }
+
+      // ===== ৯. ইউজার =====
+      async function loadUsers() {
+        const tbody = document.getElementById('usersTableBody');
+        const { data, error } = await supabase.from('orders').select('user_email, created_at');
+        if (error) { tbody.innerHTML = `<tr><td colspan="4">${error.message}</td></tr>`; return; }
+        const userMap = new Map();
+        data.forEach(o => {
+          if (!userMap.has(o.user_email)) {
+            userMap.set(o.user_email, { email: o.user_email, firstOrder: o.created_at, count: 0 });
+          }
+          userMap.get(o.user_email).count += 1;
+        });
+        const users = Array.from(userMap.values());
+        if (users.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:20px;color:#8892a8;">কোনো ইউজার নেই</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = users.map(u => `
+          <tr>
+            <td>${u.email}</td>
+            <td>${new Date(u.firstOrder).toLocaleDateString()}</td>
+            <td>${u.count}</td>
+            <td><button class="btn btn-danger btn-sm delete-user" data-email="${u.email}"><i class="fas fa-trash"></i></button></td>
+          </tr>
+        `).join('');
+
+        document.querySelectorAll('.delete-user').forEach(btn => {
+          btn.addEventListener('click', async function() {
+            const email = this.dataset.email;
+            if (email === currentAdminEmail) {
+              showToast('আপনি নিজেকে ডিলিট করতে পারবেন না', 'error');
+              return;
+            }
+            if (!confirm(`"${email}" ইউজারকে ডিলিট করবেন?`)) return;
+            await supabase.from('orders').delete().eq('user_email', email);
+            await supabase.from('admins').delete().eq('email', email);
+            showToast('ইউজার ডিলিট করা হয়েছে', 'success');
+            loadUsers();
+            loadDashboard();
+            loadAdmins();
+          });
+        });
+      }
+
+      // ===== ১০. প্রোডাক্ট =====
+      async function loadProducts() {
+        const tbody = document.getElementById('productsTableBody');
+        const { data, error } = await supabase.from('products').select('*').order('id');
+        if (error) { tbody.innerHTML = `<tr><td colspan="7">${error.message}</td></tr>`; return; }
+        if (!data || data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:#8892a8;">কোনো প্রোডাক্ট নেই</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = data.map(p => `
+          <tr>
+            <td>${p.product_code}</td>
+            <td>${p.name}</td>
+            <td>${p.coins}</td>
+            <td>$${p.price.toFixed(2)}</td>
+            <td>${p.bonus_coins || 0}</td>
+            <td>${p.is_popular ? '✅' : '❌'}</td>
+            <td>
+              <button class="btn btn-primary btn-sm edit-product" data-id="${p.id}"><i class="fas fa-edit"></i></button>
+              <button class="btn btn-danger btn-sm delete-product" data-id="${p.id}"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>
+        `).join('');
+
+        document.querySelectorAll('.edit-product').forEach(btn => {
+          btn.addEventListener('click', function() {
+            const id = parseInt(this.dataset.id);
+            const product = data.find(p => p.id === id);
+            if (product) openProductModal(product);
+          });
+        });
+
+        document.querySelectorAll('.delete-product').forEach(btn => {
+          btn.addEventListener('click', async function() {
+            if (!confirm('প্রোডাক্ট ডিলিট করবেন?')) return;
+            const id = parseInt(this.dataset.id);
+            const { error } = await supabase.from('products').delete().eq('id', id);
+            if (error) { showToast(error.message, 'error'); return; }
+            showToast('প্রোডাক্ট ডিলিট করা হয়েছে', 'success');
+            loadProducts();
+          });
+        });
+      }
+
+      // ===== ১১. কুপন =====
+      async function loadCoupons() {
+        const tbody = document.getElementById('couponsTableBody');
+        const { data, error } = await supabase.from('coupons').select('*').order('id');
+        if (error) { tbody.innerHTML = `<tr><td colspan="6">${error.message}</td></tr>`; return; }
+        if (!data || data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:#8892a8;">কোনো কুপন নেই</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = data.map(c => `
+          <tr>
+            <td><strong>${c.code}</strong></td>
+            <td>${c.description || '-'}</td>
+            <td>${c.discount_type === 'percentage' ? c.discount_value + '%' : '$' + c.discount_value}</td>
+            <td>${new Date(c.valid_from).toLocaleDateString()} - ${new Date(c.valid_to).toLocaleDateString()}</td>
+            <td>${c.is_active ? '✅' : '❌'}</td>
+            <td>
+              <button class="btn btn-danger btn-sm delete-coupon" data-id="${c.id}"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>
+        `).join('');
+
+        document.querySelectorAll('.delete-coupon').forEach(btn => {
+          btn.addEventListener('click', async function() {
+            if (!confirm('কুপন ডিলিট করবেন?')) return;
+            const id = parseInt(this.dataset.id);
+            const { error } = await supabase.from('coupons').delete().eq('id', id);
+            if (error) { showToast(error.message, 'error'); return; }
+            showToast('কুপন ডিলিট করা হয়েছে', 'success');
+            loadCoupons();
+          });
+        });
+      }
+
+      // ===== ১২. অ্যাডমিন =====
+      async function loadAdmins() {
+        const tbody = document.getElementById('adminsTableBody');
+        const { data, error } = await supabase.from('admins').select('id, email').order('id');
+        if (error) { tbody.innerHTML = `<tr><td colspan="2">${error.message}</td></tr>`; return; }
+        if (!data || data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="2" style="text-align:center;padding:20px;color:#8892a8;">কোনো অ্যাডমিন নেই</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = data.map(a => `
+          <tr>
+            <td>${a.email}</td>
+            <td>
+              ${a.email !== currentAdminEmail ? `
+                <button class="btn btn-danger btn-sm delete-admin" data-email="${a.email}"><i class="fas fa-trash"></i></button>
+              ` : '— (আপনি)'}
+            </td>
+          </tr>
+        `).join('');
+
+        document.querySelectorAll('.delete-admin').forEach(btn => {
+          btn.addEventListener('click', async function() {
+            if (!confirm('অ্যাডমিন রিমুভ করবেন?')) return;
+            const email = this.dataset.email;
+            const { error } = await supabase.from('admins').delete().eq('email', email);
+            if (error) { showToast(error.message, 'error'); return; }
+            showToast('অ্যাডমিন রিমুভ করা হয়েছে', 'success');
+            loadAdmins();
+          });
+        });
+      }
+
+      // ===== ১৩. মোডাল =====
+      function openModal(title, bodyHTML) {
+        document.getElementById('modalTitle').textContent = title;
+        document.getElementById('modalBody').innerHTML = bodyHTML;
+        document.getElementById('modalOverlay').classList.add('open');
+      }
+
+      document.getElementById('modalClose').addEventListener('click', () => {
+        document.getElementById('modalOverlay').classList.remove('open');
+      });
+      document.getElementById('modalOverlay').addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) document.getElementById('modalOverlay').classList.remove('open');
+      });
+
+      // ===== ১৪. প্রোডাক্ট মোডাল =====
+      document.getElementById('addProductBtn').addEventListener('click', () => openProductModal(null));
+
+      function openProductModal(product = null) {
+        const isEdit = !!product;
+        const html = `
+          <form id="productForm">
+            <div class="form-group">
+              <label>প্রোডাক্ট কোড</label>
+              <input type="text" id="prodCode" value="${product ? product.product_code : ''}" ${isEdit ? 'readonly' : ''} required />
+            </div>
+            <div class="form-group">
+              <label>নাম</label>
+              <input type="text" id="prodName" value="${product ? product.name : ''}" required />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>কয়েন</label>
+                <input type="number" id="prodCoins" value="${product ? product.coins : ''}" required />
+              </div>
+              <div class="form-group">
+                <label>দাম ($)</label>
+                <input type="number" step="0.01" id="prodPrice" value="${product ? product.price : ''}" required />
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>বোনাস কয়েন</label>
+                <input type="number" id="prodBonus" value="${product ? product.bonus_coins : 0}" />
+              </div>
+              <div class="form-group">
+                <label>ক্যাটাগরি</label>
+                <select id="prodCategory">
+                  <option value="starter" ${product && product.category==='starter'?'selected':''}>Starter</option>
+                  <option value="standard" ${product && product.category==='standard'?'selected':''}>Standard</option>
+                  <option value="premium" ${product && product.category==='premium'?'selected':''}>Premium</option>
+                  <option value="ultimate" ${product && product.category==='ultimate'?'selected':''}>Ultimate</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label><input type="checkbox" id="prodPopular" ${product && product.is_popular ? 'checked' : ''} /> জনপ্রিয়</label>
+            </div>
+            <button type="submit" class="btn btn-primary">${isEdit ? 'আপডেট' : 'অ্যাড'} করুন</button>
+          </form>
+        `;
+        openModal(isEdit ? 'প্রোডাক্ট এডিট' : 'নতুন প্রোডাক্ট', html);
+
+        document.getElementById('productForm').addEventListener('submit', async function(e) {
+          e.preventDefault();
+          const data = {
+            product_code: document.getElementById('prodCode').value.trim(),
+            name: document.getElementById('prodName').value.trim(),
+            coins: parseInt(document.getElementById('prodCoins').value),
+            price: parseFloat(document.getElementById('prodPrice').value),
+            bonus_coins: parseInt(document.getElementById('prodBonus').value) || 0,
+            category: document.getElementById('prodCategory').value,
+            is_popular: document.getElementById('prodPopular').checked,
+          };
+          if (isEdit) {
+            const { error } = await supabase.from('products').update(data).eq('id', product.id);
+            if (error) { showToast(error.message, 'error'); return; }
+            showToast('প্রোডাক্ট আপডেট হয়েছে', 'success');
+          } else {
+            const { error } = await supabase.from('products').insert([data]);
+            if (error) { showToast(error.message, 'error'); return; }
+            showToast('প্রোডাক্ট অ্যাড করা হয়েছে', 'success');
+          }
+          document.getElementById('modalOverlay').classList.remove('open');
+          loadProducts();
+        });
+      }
+
+      // ===== ১৫. কুপন অ্যাড =====
+      document.getElementById('addCouponBtn').addEventListener('click', () => {
+        const html = `
+          <form id="couponForm">
+            <div class="form-group"><label>কোড</label><input type="text" id="cCode" required /></div>
+            <div class="form-group"><label>বিবরণ</label><input type="text" id="cDesc" /></div>
+            <div class="form-row">
+              <div class="form-group"><label>টাইপ</label>
+                <select id="cType">
+                  <option value="percentage">Percentage</option>
+                  <option value="fixed">Fixed</option>
+                </select>
+              </div>
+              <div class="form-group"><label>মান</label><input type="number" step="0.01" id="cValue" required /></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>ন্যূনতম অর্ডার</label><input type="number" step="0.01" id="cMin" value="0" /></div>
+              <div class="form-group"><label>সর্বোচ্চ ডিসকাউন্ট</label><input type="number" step="0.01" id="cMax" /></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label>ভ্যালিড ফ্রম</label><input type="datetime-local" id="cFrom" required /></div>
+              <div class="form-group"><label>ভ্যালিড টু</label><input type="datetime-local" id="cTo" required /></div>
+            </div>
+            <div class="form-group"><label>সীমা</label><input type="number" id="cLimit" value="1" /></div>
+            <button type="submit" class="btn btn-primary">অ্যাড করুন</button>
+          </form>
+        `;
+        openModal('নতুন কুপন', html);
+
+        document.getElementById('couponForm').addEventListener('submit', async function(e) {
+          e.preventDefault();
+          const data = {
+            code: document.getElementById('cCode').value.trim().toUpperCase(),
+            description: document.getElementById('cDesc').value.trim(),
+            discount_type: document.getElementById('cType').value,
+            discount_value: parseFloat(document.getElementById('cValue').value),
+            min_order_amount: parseFloat(document.getElementById('cMin').value) || 0,
+            max_discount_amount: parseFloat(document.getElementById('cMax').value) || null,
+            valid_from: new Date(document.getElementById('cFrom').value).toISOString(),
+            valid_to: new Date(document.getElementById('cTo').value).toISOString(),
+            usage_limit: parseInt(document.getElementById('cLimit').value) || 1,
+          };
+          const { error } = await supabase.from('coupons').insert([data]);
+          if (error) { showToast(error.message, 'error'); return; }
+          showToast('কুপন অ্যাড করা হয়েছে', 'success');
+          document.getElementById('modalOverlay').classList.remove('open');
+          loadCoupons();
+        });
+      });
+
+      // ===== ১৬. ইউজার অ্যাড =====
+      document.getElementById('addUserBtn').addEventListener('click', () => {
+        const html = `
+          <form id="userForm">
+            <div class="form-group"><label>ইমেইল</label><input type="email" id="uEmail" required /></div>
+            <div class="form-group"><label>পাসওয়ার্ড</label><input type="password" id="uPass" required /></div>
+            <button type="submit" class="btn btn-primary">ইউজার তৈরি করুন</button>
+          </form>
+        `;
+        openModal('নতুন ইউজার তৈরি', html);
+
+        document.getElementById('userForm').addEventListener('submit', async function(e) {
+          e.preventDefault();
+          const email = document.getElementById('uEmail').value.trim();
+          const password = document.getElementById('uPass').value;
+          const { data, error } = await supabase.auth.signUp({ email, password });
+          if (error) { showToast(error.message, 'error'); return; }
+          showToast(`ইউজার ${email} তৈরি করা হয়েছে`, 'success');
+          document.getElementById('modalOverlay').classList.remove('open');
+          loadUsers();
+        });
+      });
+
+      // ===== ১৭. অ্যাডমিন অ্যাড =====
+      document.getElementById('addAdminBtn').addEventListener('click', () => {
+        if (currentAdminEmail !== 'mohammaddrifat.edu@gmail.com') {
+          showToast('শুধু সুপার অ্যাডমিন এই কাজ করতে পারেন', 'error');
+          return;
+        }
+        const html = `
+          <form id="adminForm">
+            <div class="form-group"><label>ইমেইল</label><input type="email" id="aEmail" required /></div>
+            <button type="submit" class="btn btn-primary">অ্যাডমিন অ্যাড করুন</button>
+          </form>
+        `;
+        openModal('নতুন অ্যাডমিন', html);
+
+        document.getElementById('adminForm').addEventListener('submit', async function(e) {
+          e.preventDefault();
+          const email = document.getElementById('aEmail').value.trim();
+          const { error } = await supabase.from('admins').insert([{ email }]);
+          if (error) {
+            if (error.code === '23505') {
+              showToast('এই ইমেইল ইতিমধ্যে অ্যাডমিন', 'error');
+            } else {
+              showToast(error.message, 'error');
+            }
+            return;
+          }
+          showToast(`অ্যাডমিন ${email} অ্যাড করা হয়েছে`, 'success');
+          document.getElementById('modalOverlay').classList.remove('open');
+          loadAdmins();
+        });
+      });
+
+      // ===== ১৮. সেশন চেক =====
+      (async function checkSession() {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          const user = session.user;
+          // অ্যাডমিন চেক
+          const { data: adminData } = await supabase
+            .from('admins')
+            .select('email')
+            .eq('email', user.email)
+            .single();
+          if (adminData) {
+            loadAdminApp(user);
+            return;
+          } else {
+            await supabase.auth.signOut();
+          }
+        }
+        loginPage.style.display = 'flex';
+        adminApp.style.display = 'none';
+      })();
+
+      // ===== ১৯. অথ স্টেট চেঞ্জ লিসেন (যখন ইউজার ম্যাজিক লিংক ক্লিক করে ফিরে আসে) =====
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          const user = session.user;
+          // অ্যাডমিন চেক করে লোড
+          supabase
+            .from('admins')
+            .select('email')
+            .eq('email', user.email)
+            .single()
+            .then(({ data }) => {
+              if (data) {
+                loadAdminApp(user);
+              } else {
+                supabase.auth.signOut();
+                showToast('আপনার অ্যাডমিন অ্যাক্সেস নেই', 'error');
+              }
+            });
+        }
+      });
+
+    })();
+  </script>
+
+</body>
+</html>
