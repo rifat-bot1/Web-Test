@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>eFootball প্রিমিয়াম টপ-আপ (Supabase)</title>
+
+  <!-- Google Fonts & Font Awesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <!-- Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    /* ===== সম্পূর্ণ CSS (একই সাথে) ===== */
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0b0e14;
+      color: #f0f4fa;
+      min-height: 100vh;
+      padding-top: 80px;
+      transition: opacity 0.5s ease;
+    }
+    body.loaded { opacity:1; }
+    :root {
+      --primary: #00b4ff;
+      --secondary: #7b2ffc;
+      --gold: #f5b700;
+      --glass: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.06);
+      --radius: 20px;
+    }
+    a { text-decoration:none; color:inherit; }
+    .container { max-width:1200px; margin:0 auto; padding:0 20px; }
+
+    /* ===== নেভিগেশন ===== */
+    #navbar {
+      position:fixed; top:0; left:0; width:100%; z-index:1000;
+      background: rgba(11,14,20,0.7);
+      backdrop-filter: blur(16px);
+      border-bottom:1px solid var(--border);
+      padding:0 24px;
+      height:72px;
+      display:flex;
+      align-items:center;
+    }
+    .nav-inner {
+      max-width:1200px; width:100%; margin:0 auto;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+    .logo {
+      font-family:'Orbitron', monospace; font-size:22px; font-weight:700;
+      display:flex; align-items:center; gap:8px;
+    }
+    .logo i { color:var(--primary); }
+    .logo span { color:var(--primary); }
+    .logo span span { color:var(--gold); }
+
+    .nav-links { display:flex; gap:6px; flex-wrap:wrap; }
+    .nav-links a {
+      padding:8px 14px; border-radius:40px; font-size:14px; font-weight:500;
+      color:#8892a8; transition:0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color:#fff; background:rgba(255,255,255,0.06); }
+    .nav-links a.active { background:rgba(0,180,255,0.12); }
+
+    .nav-actions { display:flex; align-items:center; gap:16px; }
+    #user-section { display:flex; align-items:center; gap:12px; }
+    .user-avatar {
+      width:40px; height:40px; border-radius:50%;
+      background:linear-gradient(135deg, var(--primary), var(--secondary));
+      display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:18px; color:#fff;
+      cursor:pointer; border:2px solid transparent;
+      transition:0.2s;
+    }
+    .user-avatar:hover { border-color:var(--primary); }
+    .user-avatar img { width:100%; height:100%; border-radius:50%; object-fit:cover; }
+    .auth-btn {
+      padding:8px 20px; border-radius:40px; font-weight:600; font-size:14px;
+      background:linear-gradient(135deg, var(--primary), var(--secondary));
+      color:#fff; border:none; cursor:pointer; transition:0.2s;
+    }
+    .auth-btn:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,180,255,0.3); }
+    .auth-btn-outline {
+      background:transparent; border:2px solid rgba(255,255,255,0.15); color:#fff;
+    }
+    .auth-btn-outline:hover { border-color:var(--primary); background:rgba(0,180,255,0.05); }
+
+    .mobile-toggle { display:none; flex-direction:column; gap:5px; background:transparent; border:none; }
+    .mobile-toggle span { width:26px; height:2px; background:#fff; border-radius:4px; }
+
+    /* ===== পেজ সেকশন ===== */
+    .page-section { display:none; padding:40px 0 60px; animation:fadeIn 0.4s ease; }
+    .page-section.active { display:block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(18px);} to{opacity:1;transform:translateY(0);} }
+
+    .section-header { text-align:center; margin-bottom:40px; }
+    .section-tag {
+      display:inline-block; font-size:12px; font-weight:600; letter-spacing:2px;
+      color:var(--primary); background:rgba(0,180,255,0.08);
+      padding:4px 16px; border-radius:40px; border:1px solid rgba(0,180,255,0.12);
+      margin-bottom:10px;
+    }
+    .section-title { font-size:34px; font-weight:800; line-height:1.2; }
+    .gradient-text { background:linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+    /* ===== কার্ড ===== */
+    .glass-card {
+      background:var(--glass); backdrop-filter:blur(12px);
+      border:1px solid var(--border); border-radius:var(--radius);
+      padding:28px 24px; transition:0.25s;
+    }
+    .glass-card:hover { border-color:rgba(0,180,255,0.2); transform:translateY(-4px); }
+
+    /* ===== হোম হিরো ===== */
+    .hero {
+      display:grid; grid-template-columns:1fr 1fr; gap:50px;
+      align-items:center; min-height:60vh;
+    }
+    .hero-content { display:flex; flex-direction:column; gap:20px; }
+    .hero-title { font-size:48px; font-weight:900; line-height:1.08; }
+    .hero-desc { font-size:18px; color:#8892a8; max-width:480px; line-height:1.7; }
+    .hero-stats { display:flex; gap:32px; padding-top:12px; }
+    .stat-number { font-size:28px; font-weight:800; font-family:'Orbitron',monospace; color:#fff; }
+    .stat-label { font-size:14px; color:#8892a8; }
+
+    .btn {
+      display:inline-flex; align-items:center; gap:10px;
+      padding:12px 30px; border-radius:60px; font-weight:600; font-size:15px;
+      border:none; cursor:pointer; transition:0.2s;
+    }
+    .btn-primary { background:linear-gradient(135deg, var(--primary), var(--secondary)); color:#fff; box-shadow:0 4px 20px rgba(0,180,255,0.25); }
+    .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(0,180,255,0.35); }
+    .btn-outline { background:transparent; border:2px solid rgba(255,255,255,0.12); color:#fff; }
+    .btn-outline:hover { border-color:var(--primary); background:rgba(0,180,255,0.05); }
+    .btn-gold { background:linear-gradient(135deg, var(--gold), #f7931e); color:#0b0e14; }
+    .btn-sm { padding:8px 18px; font-size:13px; }
+    .btn-full { width:100%; justify-content:center; }
+
+    /* ===== কয়েন গ্রিড ===== */
+    .coin-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:20px; margin:30px 0; }
+    .coin-card { text-align:center; padding:20px; position:relative; }
+    .coin-card .icon { font-size:32px; color:var(--gold); }
+    .coin-card .coins { font-family:'Orbitron',monospace; font-size:28px; font-weight:800; margin:8px 0; }
+    .coin-card .price { font-size:18px; font-weight:600; color:var(--primary); }
+    .coin-badge { position:absolute; top:-6px; right:-6px; background:linear-gradient(135deg,#ff6b35,#ff3366); color:#fff; font-size:10px; font-weight:700; padding:4px 12px; border-radius:30px; }
+
+    /* ===== ফর্ম ===== */
+    .form-group { margin-bottom:18px; }
+    .form-group label { display:block; font-size:14px; font-weight:600; color:#8892a8; margin-bottom:4px; }
+    .form-group input, .form-group select, .form-group textarea {
+      width:100%; padding:12px 16px; background:rgba(255,255,255,0.04); border:1px solid var(--border);
+      border-radius:12px; color:#fff; font-size:15px; transition:0.2s;
+    }
+    .form-group input:focus, .form-group select:focus { border-color:var(--primary); background:rgba(255,255,255,0.06); }
+    .form-group select option { background:#1a1a2e; }
+    .form-error { display:none; color:#ff6b6b; font-size:13px; margin-top:4px; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+
+    .order-summary { background:rgba(0,180,255,0.04); border:1px solid rgba(0,180,255,0.06); border-radius:12px; padding:18px 20px; margin:20px 0; }
+    .summary-row { display:flex; justify-content:space-between; padding:6px 0; font-size:14px; color:#8892a8; }
+    .summary-row.total { border-top:1px solid var(--border); margin-top:8px; padding-top:12px; font-size:18px; font-weight:700; color:#fff; }
+    .summary-row.total span:last-child { color:var(--gold); }
+
+    /* ===== অর্ডার লিস্ট ===== */
+    .order-item {
+      display:flex; justify-content:space-between; align-items:center;
+      padding:14px 20px; background:rgba(255,255,255,0.02); border-radius:12px;
+      margin-bottom:8px; border:1px solid var(--border);
+    }
+    .order-item .order-id { font-weight:600; }
+    .order-item .order-meta { font-size:13px; color:#8892a8; }
+    .status-badge { display:inline-block; padding:2px 14px; border-radius:30px; font-size:12px; font-weight:600; }
+    .status-badge.delivered { background:rgba(0,255,136,0.12); color:#8affc4; border:1px solid rgba(0,255,136,0.1); }
+    .status-badge.pending { background:rgba(255,215,0,0.12); color:#f5b700; border:1px solid rgba(255,215,0,0.1); }
+    .status-badge.processing { background:rgba(0,180,255,0.12); color:#00b4ff; border:1px solid rgba(0,180,255,0.1); }
+
+    /* ===== টেবিল (ড্যাশবোর্ড) ===== */
+    .table-wrapper { overflow-x:auto; margin-top:20px; }
+    .data-table { width:100%; border-collapse:collapse; font-size:14px; }
+    .data-table th { padding:12px 16px; text-align:left; background:rgba(255,255,255,0.02); border-bottom:1px solid var(--border); color:#8892a8; font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:0.5px; }
+    .data-table td { padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.03); }
+    .data-table tr:hover td { background:rgba(255,255,255,0.02); }
+    .status-select { background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:8px; padding:4px 10px; color:#fff; font-size:13px; }
+    .table-actions button { padding:4px 12px; border-radius:8px; font-size:12px; font-weight:600; border:none; cursor:pointer; }
+    .edit-btn { background:rgba(0,180,255,0.1); color:var(--primary); }
+    .edit-btn:hover { background:rgba(0,180,255,0.2); }
+    .delete-btn { background:rgba(255,51,102,0.1); color:#ff3366; }
+    .delete-btn:hover { background:rgba(255,51,102,0.2); }
+
+    /* ===== ড্যাশবোর্ড স্ট্যাট ===== */
+    .stat-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:30px; }
+    .stat-card { text-align:center; padding:20px; }
+    .stat-card .num { font-size:32px; font-weight:800; font-family:'Orbitron',monospace; color:var(--primary); }
+
+    /* ===== টপ-আপ সাইডবার ===== */
+    .topup-wrapper { display:grid; grid-template-columns:2fr 1fr; gap:30px; }
+    .info-card { text-align:center; padding:20px; }
+    .info-card i { font-size:32px; color:var(--primary); margin-bottom:8px; }
+
+    /* ===== ফুটার ===== */
+    .footer { margin-top:60px; padding:40px 0 20px; border-top:1px solid var(--border); text-align:center; color:#4a5568; font-size:14px; }
+
+    /* ===== টোস্ট ===== */
+    .toast-container { position:fixed; bottom:30px; right:30px; z-index:9999; display:flex; flex-direction:column; gap:10px; max-width:380px; }
+    .toast { padding:14px 20px; border-radius:12px; background:rgba(11,14,20,0.95); backdrop-filter:blur(12px); border:1px solid var(--border); color:#fff; font-size:14px; box-shadow:0 10px 40px rgba(0,0,0,0.5); animation:slideIn 0.3s ease; display:flex; align-items:center; gap:12px; }
+    .toast.success { border-color:rgba(0,255,136,0.2); }
+    .toast.success i { color:#8affc4; }
+    .toast.error { border-color:rgba(255,51,102,0.2); }
+    .toast.error i { color:#ff6b6b; }
+    @keyframes slideIn { from{opacity:0;transform:translateX(30px);} to{opacity:1;transform:translateX(0);} }
+    .toast-out { animation:slideOut 0.3s ease forwards; }
+    @keyframes slideOut { to{opacity:0;transform:translateX(30px);} }
+
+    /* ===== অথেন্টিকেশন মোডাল ===== */
+    .auth-modal {
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(8px);
+      z-index:9998; justify-content:center; align-items:center;
+    }
+    .auth-modal.open { display:flex; }
+    .auth-box {
+      background:#1a1e2a; padding:40px 32px; border-radius:24px; max-width:400px; width:100%;
+      border:1px solid var(--border); box-shadow:0 20px 60px rgba(0,0,0,0.7);
+    }
+    .auth-box h2 { margin-bottom:20px; text-align:center; }
+    .auth-box .form-group { margin-bottom:16px; }
+    .auth-box .btn { width:100%; justify-content:center; }
+    .auth-switch { text-align:center; margin-top:16px; color:#8892a8; }
+    .auth-switch a { color:var(--primary); cursor:pointer; }
+
+    /* ===== রেস্পন্সিভ ===== */
+    @media (max-width:768px) {
+      .nav-links { display:none; }
+      .mobile-toggle { display:flex; }
+      .hero { grid-template-columns:1fr; text-align:center; }
+      .hero-desc { margin:0 auto; }
+      .hero-stats { justify-content:center; }
+      .topup-wrapper { grid-template-columns:1fr; }
+      .form-row { grid-template-columns:1fr; }
+      .stat-grid { grid-template-columns:1fr 1fr; }
+      .section-title { font-size:28px; }
+    }
+    @media (max-width:480px) {
+      .stat-grid { grid-template-columns:1fr; }
+      .coin-grid { grid-template-columns:1fr 1fr; }
+      .order-item { flex-direction:column; align-items:flex-start; gap:6px; }
+    }
+
+    /* ===== মোবাইল মেনু ===== */
+    .mobile-menu {
+      position:fixed; top:0; right:-100%; width:280px; height:100%;
+      background:rgba(11,14,20,0.98); backdrop-filter:blur(20px);
+      padding:24px; transition:0.3s; z-index:2000;
+      display:flex; flex-direction:column; gap:20px;
+    }
+    .mobile-menu.open { right:0; }
+    .mobile-menu .close { align-self:flex-end; font-size:24px; background:none; border:none; color:#fff; }
+    .mobile-menu a { padding:10px 0; border-bottom:1px solid var(--border); color:#8892a8; font-weight:500; }
+
+    /* ===== লোডিং ===== */
+    #loading { position:fixed; inset:0; z-index:99999; background:#0b0e14; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:0.5s; }
+    #loading.hide { opacity:0; pointer-events:none; }
+    .spinner { width:60px; height:60px; border:4px solid rgba(0,180,255,0.1); border-top-color:var(--primary); border-radius:50%; animation:spin 0.8s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg);} }
+    .loader-text { margin-top:20px; font-family:'Orbitron',monospace; letter-spacing:3px; color:var(--primary); }
+  </style>
+</head>
+<body>
+
+  <!-- ===== লোডিং ===== -->
+  <div id="loading"><div class="spinner"></div><div class="loader-text">লোড হচ্ছে...</div></div>
+
+  <!-- ===== টোস্ট ===== -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ===== অথেন্টিকেশন মোডাল ===== -->
+  <div class="auth-modal" id="authModal">
+    <div class="auth-box">
+      <h2 id="authTitle">সাইন ইন</h2>
+      <form id="authForm">
+        <div class="form-group">
+          <label>ইমেইল</label>
+          <input type="email" id="authEmail" placeholder="your@email.com" required />
+        </div>
+        <div class="form-group">
+          <label>পাসওয়ার্ড</label>
+          <input type="password" id="authPassword" placeholder="পাসওয়ার্ড" required />
+        </div>
+        <button type="submit" class="btn btn-primary" id="authSubmitBtn">সাইন ইন</button>
+      </form>
+      <div class="auth-switch">
+        <span id="authToggleText">নতুন? <a id="authToggleLink">সাইন আপ করুন</a></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== নেভিগেশন ===== -->
+  <header id="navbar">
+    <div class="nav-inner">
+      <a href="#" class="logo" onclick="showPage('home')"><i class="fas fa-futbol"></i> eF<span>TopUp</span></a>
+      <nav class="nav-links">
+        <a href="#" class="active" data-page="home">হোম</a>
+        <a href="#" data-page="shop">শপ</a>
+        <a href="#" data-page="topup">টপ-আপ</a>
+        <a href="#" data-page="orders">অর্ডার</a>
+        <a href="#" data-page="dashboard">ড্যাশবোর্ড</a>
+      </nav>
+      <div class="nav-actions">
+        <div id="user-section">
+          <!-- JS দিয়ে ইউজার UI তৈরি হবে -->
+        </div>
+        <button class="mobile-toggle" id="mobileToggle"><span></span><span></span><span></span></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== মোবাইল মেনু ===== -->
+  <div class="mobile-menu" id="mobileMenu">
+    <button class="close" id="mobileClose"><i class="fas fa-times"></i></button>
+    <a href="#" data-page="home">হোম</a>
+    <a href="#" data-page="shop">শপ</a>
+    <a href="#" data-page="topup">টপ-আপ</a>
+    <a href="#" data-page="orders">অর্ডার</a>
+    <a href="#" data-page="dashboard">ড্যাশবোর্ড</a>
+  </div>
+
+  <!-- ===== প্রধান কন্টেন্ট ===== -->
+  <div class="container">
+
+    <!-- ====== হোম ====== -->
+    <section class="page-section active" data-page="home">
+      <div class="hero">
+        <div class="hero-content">
+          <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(0,180,255,0.06);border:1px solid rgba(0,180,255,0.1);padding:6px 16px;border-radius:40px;font-size:13px;font-weight:500;color:var(--primary);width:fit-content;">
+            <span style="width:8px;height:8px;border-radius:50%;background:#8affc4;display:inline-block;animation:pulse 1.5s infinite;"></span> ⚡ ইনস্ট্যান্ট ডেলিভারি
+          </div>
+          <h1 class="hero-title"><span class="gradient-text">প্রিমিয়াম</span> eFootball<br />টপ-আপ স্টোর</h1>
+          <p class="hero-desc">নির্ভরযোগ্য ও দ্রুত কয়েন ডেলিভারি। সারা বিশ্বের হাজার হাজার খেলোয়াড় আমাদের উপর আস্থা রাখে।</p>
+          <div style="display:flex;gap:14px;flex-wrap:wrap;">
+            <a href="#" class="btn btn-primary" onclick="showPage('shop')">🛒 কয়েন কিনুন</a>
+            <a href="#" class="btn btn-outline" onclick="showPage('topup')">📦 টপ-আপ করুন</a>
+          </div>
+          <div class="hero-stats">
+            <div><span class="stat-number">১২,৫০০+</span><div class="stat-label">খেলোয়াড়</div></div>
+            <div><span class="stat-number">৪৮,৭০০</span><div class="stat-label">কয়েন ডেলিভারি</div></div>
+            <div><span class="stat-number">৯৯.৮%</span><div class="stat-label">সন্তুষ্টি</div></div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:center;align-items:center;">
+          <div style="width:260px;height:320px;background:linear-gradient(145deg,rgba(0,180,255,0.08),rgba(123,47,252,0.08));border-radius:30px;border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(8px);">
+            <i class="fas fa-futbol" style="font-size:64px;color:var(--primary);filter:drop-shadow(0 0 30px rgba(0,180,255,0.2));"></i>
+            <span style="font-family:'Orbitron',monospace;font-size:26px;font-weight:700;letter-spacing:1px;">eFootball</span>
+            <span style="color:var(--gold);font-weight:500;">প্রিমিয়াম কয়েন</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== শপ ====== -->
+    <section class="page-section" data-page="shop">
+      <div class="section-header">
+        <span class="section-tag">শপ</span>
+        <h2 class="section-title">আপনার <span class="gradient-text">কয়েন প্যাকেজ</span> বেছে নিন</h2>
+      </div>
+      <div class="coin-grid" id="coinGrid"></div>
+    </section>
+
+    <!-- ====== টপ-আপ ====== -->
+    <section class="page-section" data-page="topup">
+      <div class="section-header">
+        <span class="section-tag">টপ-আপ</span>
+        <h2 class="section-title">ইনস্ট্যান্ট <span class="gradient-text">টপ-আপ</span></h2>
+      </div>
+      <div class="topup-wrapper">
+        <div class="glass-card">
+          <h3 style="margin-bottom:20px;display:flex;gap:12px;"><i class="fas fa-pen-fancy" style="color:var(--primary);"></i> টপ-আপ ফর্ম</h3>
+          <form id="topupForm" novalidate>
+            <div class="form-group">
+              <label>প্লেয়ার আইডি <span style="color:#ff6b6b;">*</span></label>
+              <input type="text" id="playerId" placeholder="আপনার প্লেয়ার আইডি দিন" required />
+              <div class="form-error">প্লেয়ার আইডি দিন</div>
+            </div>
+            <div class="form-group">
+              <label>ইউজারনেম</label>
+              <input type="text" id="username" placeholder="আপনার ইউজারনেম" />
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>প্ল্যাটফর্ম <span style="color:#ff6b6b;">*</span></label>
+                <select id="platform" required>
+                  <option value="">বেছে নিন</option>
+                  <option value="ps5">PlayStation 5</option>
+                  <option value="ps4">PlayStation 4</option>
+                  <option value="xbox">Xbox</option>
+                  <option value="pc">PC/Steam</option>
+                  <option value="mobile">মোবাইল</option>
+                </select>
+                <div class="form-error">প্ল্যাটফর্ম বেছে নিন</div>
+              </div>
+              <div class="form-group">
+                <label>অঞ্চল <span style="color:#ff6b6b;">*</span></label>
+                <select id="region" required>
+                  <option value="">বেছে নিন</option>
+                  <option value="global">গ্লোবাল</option>
+                  <option value="asia">এশিয়া</option>
+                  <option value="europe">ইউরোপ</option>
+                  <option value="na">উত্তর আমেরিকা</option>
+                </select>
+                <div class="form-error">অঞ্চল বেছে নিন</div>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>প্যাকেজ <span style="color:#ff6b6b;">*</span></label>
+                <select id="coinPackage" required>
+                  <option value="">বেছে নিন</option>
+                  <option value="1000">১,০০০ কয়েন - $৯.৯৯</option>
+                  <option value="2000">২,০০০ কয়েন - $১৮.৯৯</option>
+                  <option value="5000">৫,০০০ কয়েন - $৪৪.৯৯</option>
+                  <option value="10000">১০,০০০ কয়েন - $৮৪.৯৯</option>
+                  <option value="20000">২০,০০০ কয়েন - $১৫৯.৯৯</option>
+                </select>
+                <div class="form-error">প্যাকেজ বেছে নিন</div>
+              </div>
+              <div class="form-group">
+                <label>পরিমাণ</label>
+                <input type="number" id="quantity" value="1" min="1" max="10" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>কুপন কোড</label>
+              <input type="text" id="couponCode" placeholder="কুপন কোড (ঐচ্ছিক)" />
+            </div>
+
+            <div class="order-summary" id="orderSummary">
+              <h4>অর্ডার সারাংশ</h4>
+              <div class="summary-row"><span>প্যাকেজ:</span><span id="summaryPackage">১,০০০ কয়েন</span></div>
+              <div class="summary-row"><span>পরিমাণ:</span><span id="summaryQty">১</span></div>
+              <div class="summary-row"><span>মূল্য:</span><span id="summaryPrice">$৯.৯৯</span></div>
+              <div class="summary-row"><span>ডিসকাউন্ট:</span><span id="summaryDiscount">-$০.০০</span></div>
+              <div class="summary-row total"><span>মোট:</span><span id="summaryTotal">$৯.৯৯</span></div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full"><i class="fas fa-arrow-right"></i> অর্ডার জমা দিন</button>
+          </form>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="info-card glass-card"><i class="fas fa-clock"></i><h4>ইনস্ট্যান্ট ডেলিভারি</h4><p style="color:#8892a8;font-size:14px;">১-৫ মিনিটের মধ্যে কয়েন পেয়ে যাবেন</p></div>
+          <div class="info-card glass-card"><i class="fas fa-lock"></i><h4>সুরক্ষিত পেমেন্ট</h4><p style="color:#8892a8;font-size:14px;">এনক্রিপ্টেড ট্রানজেকশন</p></div>
+          <div class="info-card glass-card"><i class="fas fa-headset"></i><h4>২৪/৭ সাপোর্ট</h4><p style="color:#8892a8;font-size:14px;">যেকোনো সময় সাহায্য</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== অর্ডার ====== -->
+    <section class="page-section" data-page="orders">
+      <div class="section-header">
+        <span class="section-tag">অর্ডার</span>
+        <h2 class="section-title">আমার <span class="gradient-text">অর্ডারসমূহ</span></h2>
+      </div>
+      <div class="glass-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
+          <h3><i class="fas fa-list"></i> অর্ডার হিস্ট্রি</h3>
+          <button class="btn btn-primary btn-sm" id="refreshOrders"><i class="fas fa-sync-alt"></i> রিফ্রেশ</button>
+        </div>
+        <div id="ordersList"><div style="text-align:center;padding:30px 0;color:#8892a8;"><i class="fas fa-spinner fa-spin"></i><p>লোড হচ্ছে...</p></div></div>
+      </div>
+    </section>
+
+    <!-- ====== ড্যাশবোর্ড ====== -->
+    <section class="page-section" data-page="dashboard">
+      <div class="section-header">
+        <span class="section-tag">অ্যাডমিন</span>
+        <h2 class="section-title">ড্যাশবোর্ড <span class="gradient-text">ওভারভিউ</span></h2>
+      </div>
+      <div class="stat-grid" id="dashboardStats">
+        <div class="stat-card glass-card"><div class="num" id="statTotal">0</div><div>মোট অর্ডার</div></div>
+        <div class="stat-card glass-card"><div class="num" id="statDelivered">0</div><div>ডেলিভারি হয়েছে</div></div>
+        <div class="stat-card glass-card"><div class="num" id="statPending">0</div><div>পেন্ডিং</div></div>
+        <div class="stat-card glass-card"><div class="num" id="statRevenue">$০</div><div>মোট আয়</div></div>
+      </div>
+      <div class="glass-card">
+        <h3 style="margin-bottom:16px;"><i class="fas fa-table"></i> সব অর্ডার</h3>
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead><tr><th>অর্ডার আইডি</th><th>প্লেয়ার</th><th>ইউজার</th><th>প্যাকেজ</th><th>মোট</th><th>স্ট্যাটাস</th><th>অ্যাকশন</th></tr></thead>
+            <tbody id="adminOrdersBody"><tr><td colspan="7" style="text-align:center;padding:30px;color:#8892a8;">লোড হচ্ছে...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- ===== ফুটার ===== -->
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; ২০২৬ eFootball টপ-আপ · সর্বস্বত্ব সংরক্ষিত</p>
+      <p style="font-size:12px;color:#4a5568;">Supabase অথেন্টিকেশন ও ডাটাবেস</p>
+    </div>
+  </footer>
+
+  <!-- ============================================================
+  জাভাস্ক্রিপ্ট – Supabase সংযুক্ত সম্পূর্ণ অ্যাপ
+  ============================================================ -->
+  <script>
+    (function() {
+      'use strict';
+
+      // ===== ১. Supabase ক্লায়েন্ট =====
+      const SUPABASE_URL = 'https://fzvauuvwpgmfvkwqqivf.supabase.co';
+      const SUPABASE_ANON_KEY = 'sb_publishable_rWY_zm_V4vij_-dYwwmKSg_BV0voJRw';
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      // ===== ২. টোস্ট =====
+      function showToast(msg, type = 'info', duration = 4000) {
+        const c = document.getElementById('toastContainer');
+        const t = document.createElement('div');
+        t.className = `toast ${type}`;
+        const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
+        t.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i> ${msg}`;
+        c.appendChild(t);
+        setTimeout(() => { t.classList.add('toast-out'); setTimeout(() => t.remove(), 300); }, duration);
+      }
+
+      // ===== ৩. লোডিং =====
+      window.addEventListener('load', () => {
+        document.getElementById('loading').classList.add('hide');
+        document.body.classList.add('loaded');
+      });
+      setTimeout(() => document.getElementById('loading').classList.add('hide'), 4000);
+
+      // ===== ৪. অথেন্টিকেশন স্টেট =====
+      let currentUser = null;
+      let isAdmin = false;
+
+      // ===== ৫. ইউজার UI আপডেট =====
+      function updateUserUI(user) {
+        const section = document.getElementById('user-section');
+        if (!section) return;
+        if (user) {
+          const email = user.email || '';
+          const initial = email.charAt(0).toUpperCase();
+          section.innerHTML = `
+            <div class="user-avatar" title="${email}"><span>${initial}</span></div>
+            <button class="auth-btn auth-btn-outline" id="logoutBtn">লগআউট</button>
+          `;
+          document.getElementById('logoutBtn').addEventListener('click', signOut);
+          // অ্যাডমিন চেক
+          isAdmin = (email === 'mohammaddrifat.edu@gmail.com');
+          if (isAdmin) {
+            document.querySelector('[data-page="dashboard"]').style.display = '';
+            loadAdminDashboard();
+          } else {
+            document.querySelector('[data-page="dashboard"]').style.display = 'none';
+          }
+          loadUserOrders();
+        } else {
+          section.innerHTML = `
+            <button class="auth-btn" id="loginBtn"><i class="fas fa-sign-in-alt"></i> সাইন ইন</button>
+          `;
+          document.getElementById('loginBtn').addEventListener('click', () => openAuthModal('signin'));
+          document.querySelector('[data-page="dashboard"]').style.display = 'none';
+          document.getElementById('ordersList').innerHTML =
+            `<div style="text-align:center;padding:30px;color:#8892a8;"><i class="fas fa-lock"></i><p>অর্ডার দেখতে সাইন ইন করুন</p></div>`;
+        }
+      }
+
+      // ===== ৬. অথেন্টিকেশন মোডাল =====
+      const authModal = document.getElementById('authModal');
+      let authMode = 'signin'; // 'signin' or 'signup'
+
+      function openAuthModal(mode = 'signin') {
+        authMode = mode;
+        document.getElementById('authTitle').textContent = mode === 'signin' ? 'সাইন ইন' : 'সাইন আপ';
+        document.getElementById('authSubmitBtn').textContent = mode === 'signin' ? 'সাইন ইন' : 'সাইন আপ';
+        document.getElementById('authToggleText').innerHTML =
+          mode === 'signin' ? 'নতুন? <a id="authToggleLink">সাইন আপ করুন</a>' : 'ইতিমধ্যে আছে? <a id="authToggleLink">সাইন ইন করুন</a>';
+        document.getElementById('authToggleLink').onclick = () => {
+          openAuthModal(mode === 'signin' ? 'signup' : 'signin');
+        };
+        authModal.classList.add('open');
+        document.getElementById('authForm').reset();
+      }
+
+      // ফর্ম সাবমিট
+      document.getElementById('authForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('authEmail').value.trim();
+        const password = document.getElementById('authPassword').value;
+        const btn = document.getElementById('authSubmitBtn');
+        btn.disabled = true;
+        btn.textContent = 'লোড হচ্ছে...';
+
+        let result;
+        if (authMode === 'signin') {
+          result = await supabase.auth.signInWithPassword({ email, password });
+        } else {
+          result = await supabase.auth.signUp({ email, password });
+        }
+
+        btn.disabled = false;
+        btn.textContent = authMode === 'signin' ? 'সাইন ইন' : 'সাইন আপ';
+
+        if (result.error) {
+          showToast(result.error.message, 'error');
+        } else {
+          authModal.classList.remove('open');
+          showToast(authMode === 'signin' ? 'সাইন ইন সফল!' : 'সাইন আপ সফল! এখন সাইন ইন করুন', 'success');
+          if (authMode === 'signup') {
+            // সাইন আপ হলে আবার সাইন ইন মোডে নিয়ে যাই
+            openAuthModal('signin');
+          }
+          // ইউজার সেট হবে ইভেন্ট লিসেনারের মাধ্যমে
+        }
+      });
+
+      // মোডাল বন্ধ (ESC বা বাইরে ক্লিক)
+      authModal.addEventListener('click', (e) => {
+        if (e.target === authModal) authModal.classList.remove('open');
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') authModal.classList.remove('open');
+      });
+
+      // ===== ৭. সাইন আউট =====
+      async function signOut() {
+        await supabase.auth.signOut();
+        showToast('লগআউট করা হয়েছে', 'info');
+      }
+
+      // ===== ৮. অথ স্টেট চেঞ্জ লিসেন =====
+      supabase.auth.onAuthStateChange((event, session) => {
+        const user = session?.user || null;
+        currentUser = user;
+        updateUserUI(user);
+        if (user) {
+          loadUserOrders();
+          if (user.email === 'mohammaddrifat.edu@gmail.com') {
+            loadAdminDashboard();
+          }
+        }
+      });
+
+      // ===== ৯. ডাটাবেস অপারেশন =====
+
+      // প্রোডাক্ট লোড
+      async function loadProducts() {
+        const { data, error } = await supabase.from('products').select('*').order('id');
+        if (error) { console.error(error); return; }
+        const grid = document.getElementById('coinGrid');
+        grid.innerHTML = data.map(p => `
+          <div class="glass-card coin-card" style="position:relative;">
+            ${p.is_popular ? '<span class="coin-badge">🔥 জনপ্রিয়</span>' : ''}
+            <div class="icon"><i class="fas fa-coins"></i></div>
+            <div style="font-weight:600;font-size:16px;">${p.name}</div>
+            <div class="coins">${p.coins.toLocaleString()}</div>
+            <div class="price">$${p.price.toFixed(2)}</div>
+            <button class="btn btn-primary btn-sm" onclick="window.selectPackage(${p.coins})"><i class="fas fa-shopping-cart"></i> কিনুন</button>
+          </div>
+        `).join('');
+      }
+
+      window.selectPackage = function(coins) {
+        const sel = document.getElementById('coinPackage');
+        if (sel) {
+          sel.value = coins.toString();
+          sel.dispatchEvent(new Event('change'));
+        }
+        showPage('topup');
+      };
+
+      // অর্ডার লোড (ইউজারের)
+      async function loadUserOrders() {
+        if (!currentUser) return;
+        const container = document.getElementById('ordersList');
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('user_email', currentUser.email)
+          .order('created_at', { ascending: false });
+        if (error) { console.error(error); return; }
+        if (!data || data.length === 0) {
+          container.innerHTML =
+            `<div style="text-align:center;padding:30px;color:#8892a8;"><i class="fas fa-inbox"></i><p>কোনো অর্ডার নেই</p></div>`;
+          return;
+        }
+        container.innerHTML = data.map(o => `
+          <div class="order-item">
+            <div><span class="order-id">${o.order_id}</span> <span class="order-meta">${o.package_name} × ${o.quantity} · $${(o.final_amount || o.total_amount).toFixed(2)} · ${new Date(o.created_at).toLocaleDateString()}</span></div>
+            <span class="status-badge ${o.status}">${o.status.charAt(0).toUpperCase()+o.status.slice(1)}</span>
+          </div>
+        `).join('');
+      }
+
+      // অ্যাডমিন ড্যাশবোর্ড
+      async function loadAdminDashboard() {
+        if (!isAdmin) return;
+        // স্ট্যাটিসটিক্স
+        const { data: allOrders, error } = await supabase.from('orders').select('*');
+        if (error) { console.error(error); return; }
+        const total = allOrders.length;
+        const delivered = allOrders.filter(o => o.status === 'delivered').length;
+        const pending = allOrders.filter(o => o.status === 'pending').length;
+        const revenue = allOrders.filter(o => o.status === 'delivered').reduce((s, o) => s + (o.final_amount || 0), 0);
+        document.getElementById('statTotal').textContent = total;
+        document.getElementById('statDelivered').textContent = delivered;
+        document.getElementById('statPending').textContent = pending;
+        document.getElementById('statRevenue').textContent = '$' + revenue.toFixed(2);
+
+        // টেবিল
+        const tbody = document.getElementById('adminOrdersBody');
+        if (!allOrders.length) {
+          tbody.innerHTML =
+            `<tr><td colspan="7" style="text-align:center;padding:30px;color:#8892a8;">কোনো অর্ডার নেই</td></tr>`;
+          return;
+        }
+        tbody.innerHTML = allOrders.map(o => `
+          <tr>
+            <td><strong>${o.order_id}</strong></td>
+            <td>${o.player_id}</td>
+            <td>${o.username || '-'}</td>
+            <td>${o.package_name}</td>
+            <td>$${(o.final_amount || o.total_amount).toFixed(2)}</td>
+            <td>
+              <select class="status-select" data-id="${o.id}" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:#fff;font-size:13px;">
+                <option value="pending" ${o.status==='pending'?'selected':''}>Pending</option>
+                <option value="processing" ${o.status==='processing'?'selected':''}>Processing</option>
+                <option value="delivered" ${o.status==='delivered'?'selected':''}>Delivered</option>
+              </select>
+            </td>
+            <td>
+              <button class="edit-btn" onclick="window.adminUpdateStatus(${o.id})"><i class="fas fa-check"></i></button>
+              <button class="delete-btn" onclick="window.adminDeleteOrder(${o.id})"><i class="fas fa-trash"></i></button>
+            </td>
+          </tr>
+        `).join('');
+
+        // ইভেন্ট লিসেনার for status select
+        document.querySelectorAll('.status-select').forEach(sel => {
+          sel.addEventListener('change', async function() {
+            const id = parseInt(this.dataset.id);
+            const status = this.value;
+            const { error } = await supabase.from('orders').update({ status }).eq('id', id);
+            if (error) { showToast(error.message, 'error'); return; }
+            showToast('স্ট্যাটাস আপডেট হয়েছে', 'success');
+            loadAdminDashboard();
+            loadUserOrders();
+          });
+        });
+      }
+
+      // গ্লোবাল অ্যাডমিন অ্যাকশন
+      window.adminUpdateStatus = async function(id) {
+        const sel = document.querySelector(`.status-select[data-id="${id}"]`);
+        if (!sel) return;
+        const status = sel.value;
+        const { error } = await supabase.from('orders').update({ status }).eq('id', id);
+        if (error) { showToast(error.message, 'error'); return; }
+        showToast('স্ট্যাটাস আপডেট হয়েছে', 'success');
+        loadAdminDashboard();
+        loadUserOrders();
+      };
+
+      window.adminDeleteOrder = async function(id) {
+        if (!confirm('অর্ডারটি ডিলিট করবেন?')) return;
+        const { error } = await supabase.from('orders').delete().eq('id', id);
+        if (error) { showToast(error.message, 'error'); return; }
+        showToast('অর্ডার ডিলিট করা হয়েছে', 'success');
+        loadAdminDashboard();
+        loadUserOrders();
+      };
+
+      // ===== ১০. টপ-আপ ফর্ম =====
+      (function initTopUp() {
+        const form = document.getElementById('topupForm');
+        const pkgSelect = document.getElementById('coinPackage');
+        const qtyInput = document.getElementById('quantity');
+        const couponInput = document.getElementById('couponCode');
+
+        const pkgData = {
+          '1000': { label: '১,০০০ কয়েন', price: 9.99 },
+          '2000': { label: '২,০০০ কয়েন', price: 18.99 },
+          '5000': { label: '৫,০০০ কয়েন', price: 44.99 },
+          '10000': { label: '১০,০০০ কয়েন', price: 84.99 },
+          '20000': { label: '২০,০০০ কয়েন', price: 159.99 },
+        };
+
+        function updateSummary() {
+          const val = pkgSelect.value;
+          const qty = parseInt(qtyInput.value) || 1;
+          const coupon = couponInput.value.trim().toUpperCase();
+          if (!val || !pkgData[val]) {
+            document.getElementById('summaryPackage').textContent = 'প্যাকেজ বেছে নিন';
+            document.getElementById('summaryQty').textContent = '০';
+            document.getElementById('summaryPrice').textContent = '$০.০০';
+            document.getElementById('summaryDiscount').textContent = '-$০.০০';
+            document.getElementById('summaryTotal').textContent = '$০.০০';
+            return;
+          }
+          const data = pkgData[val];
+          let price = data.price * qty;
+          let discount = 0;
+          if (coupon === 'WELCOME500') discount = price * 0.10;
+          else if (coupon === 'FLASH50') discount = price * 0.50;
+          else if (coupon === 'LOYALTY20') discount = price * 0.20;
+          const total = price - discount;
+          document.getElementById('summaryPackage').textContent = data.label;
+          document.getElementById('summaryQty').textContent = qty;
+          document.getElementById('summaryPrice').textContent = '$' + price.toFixed(2);
+          document.getElementById('summaryDiscount').textContent = '-$' + discount.toFixed(2);
+          document.getElementById('summaryTotal').textContent = '$' + total.toFixed(2);
+        }
+
+        pkgSelect.addEventListener('change', updateSummary);
+        qtyInput.addEventListener('input', updateSummary);
+        couponInput.addEventListener('input', updateSummary);
+        updateSummary();
+
+        form.addEventListener('submit', async function(e) {
+          e.preventDefault();
+          if (!currentUser) {
+            showToast('অর্ডার করতে সাইন ইন করুন', 'error');
+            openAuthModal('signin');
+            return;
+          }
+          const playerId = document.getElementById('playerId').value.trim();
+          const platform = document.getElementById('platform').value;
+          const region = document.getElementById('region').value;
+          const pkgVal = pkgSelect.value;
+          let valid = true;
+          document.querySelectorAll('.form-error').forEach(el => el.style.display = 'none');
+          if (!playerId) { document.getElementById('playerId').nextElementSibling.style.display = 'block';
+            valid = false; }
+          if (!platform) { document.getElementById('platform').nextElementSibling.style.display = 'block';
+            valid = false; }
+          if (!region) { document.getElementById('region').nextElementSibling.style.display = 'block';
+            valid = false; }
+          if (!pkgVal) { document.getElementById('coinPackage').nextElementSibling.style.display = 'block';
+            valid = false; }
+          if (!valid) return;
+
+          const data = pkgData[pkgVal];
+          const qty = parseInt(qtyInput.value) || 1;
+          const coupon = couponInput.value.trim().toUpperCase();
+          let discount = 0;
+          if (coupon === 'WELCOME500') discount = data.price * qty * 0.10;
+          else if (coupon === 'FLASH50') discount = data.price * qty * 0.50;
+          else if (coupon === 'LOYALTY20') discount = data.price * qty * 0.20;
+
+          const order = {
+            order_id: 'EF-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6)
+              .toUpperCase(),
+            player_id: playerId,
+            username: document.getElementById('username').value.trim() || currentUser.email?.split('@')[0] || 'User',
+            platform,
+            region,
+            package_name: data.label,
+            unit_price: data.price,
+            quantity: qty,
+            total_amount: data.price * qty,
+            discount_amount: discount,
+            final_amount: (data.price * qty) - discount,
+            status: 'pending',
+            user_email: currentUser.email,
+          };
+
+          const { error } = await supabase.from('orders').insert([order]);
+          if (error) { showToast(error.message, 'error'); return; }
+          showToast(`অর্ডার ${order.order_id} সফলভাবে জমা হয়েছে!`, 'success');
+          form.reset();
+          updateSummary();
+          showPage('orders');
+          loadUserOrders();
+        });
+      })();
+
+      // ===== ১১. পেজ নেভিগেশন =====
+      function showPage(page) {
+        document.querySelectorAll('.page-section').forEach(s => {
+          s.classList.remove('active');
+          s.style.display = 'none';
+        });
+        const target = document.querySelector(`.page-section[data-page="${page}"]`);
+        if (target) {
+          target.classList.add('active');
+          target.style.display = '';
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        document.querySelectorAll('.nav-links a').forEach(a => {
+          a.classList.toggle('active', a.dataset.page === page);
+        });
+        document.querySelectorAll('.mobile-menu a').forEach(a => {
+          a.classList.toggle('active', a.dataset.page === page);
+        });
+        document.getElementById('mobileMenu').classList.remove('open');
+      }
+      window.showPage = showPage;
+
+      // ===== ১২. ইভেন্ট লিসেনার =====
+      document.querySelectorAll('.nav-links a, .mobile-menu a').forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          const page = this.dataset.page;
+          if (page) showPage(page);
+        });
+      });
+
+      document.getElementById('mobileToggle').addEventListener('click', () => {
+        document.getElementById('mobileMenu').classList.toggle('open');
+      });
+      document.getElementById('mobileClose').addEventListener('click', () => {
+        document.getElementById('mobileMenu').classList.remove('open');
+      });
+
+      document.getElementById('refreshOrders').addEventListener('click', function() {
+        const icon = this.querySelector('i');
+        icon.classList.add('fa-spin');
+        loadUserOrders();
+        if (isAdmin) loadAdminDashboard();
+        setTimeout(() => icon.classList.remove('fa-spin'), 500);
+        showToast('রিফ্রেশ করা হয়েছে', 'info');
+      });
+
+      // ===== ১৩. প্রাথমিক লোড =====
+      loadProducts();
+
+      // ===== ১৪. ফুটার বছর =====
+      document.querySelector('.footer p').textContent = `© ${new Date().getFullYear()} eFootball টপ-আপ · সর্বস্বত্ব সংরক্ষিত`;
+
+      console.log('✅ eFootball টপ-আপ (Supabase) সম্পূর্ণ লোড হয়েছে!');
+      console.log('🔐 অ্যাডমিন ইমেইল: mohammaddrifat.edu@gmail.com');
+
+    })();
+  </script>
+</body>
+</html>
