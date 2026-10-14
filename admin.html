@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>eFootball অ্যাডমিন প্যানেল</title>
+  <title>eFTopUp — Admin Control Center</title>
+  <meta name="theme-color" content="#080b12" />
+  <meta name="robots" content="noindex,nofollow" />
 
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
@@ -390,6 +392,46 @@
       .data-table th, .data-table td { padding: 6px 8px; }
       .modal-box { padding: 16px; }
     }
+  
+  /* ===== 2026 ADMIN CONTROL CENTER UPGRADE ===== */
+  :root { --admin-cyan:#29c5ff;--admin-purple:#8257ff;--admin-line:rgba(130,177,255,.15); }
+  body { background:radial-gradient(ellipse at 10% 0%,rgba(0,180,255,.075),transparent 35%),#080b12; }
+  .sidebar { background:rgba(9,13,23,.96);border-right-color:var(--admin-line);box-shadow:10px 0 40px rgba(0,0,0,.12); }
+  .sidebar .nav-item { margin:3px 10px;padding:12px 14px;border-left:0;border-radius:12px; }
+  .sidebar .nav-item.active { background:linear-gradient(90deg,rgba(0,180,255,.15),rgba(123,47,252,.07));box-shadow:inset 0 0 0 1px rgba(0,180,255,.10); }
+  .main { padding:clamp(16px,3vw,32px); }
+  .main-header { padding-bottom:16px;border-bottom:1px solid var(--admin-line); }
+  .main-header h1 { letter-spacing:-.7px; }
+  .glass-card { background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.015));border-color:var(--admin-line);box-shadow:0 15px 45px rgba(0,0,0,.12); }
+  .stat-card { text-align:left;position:relative;overflow:hidden;min-height:115px; }
+  .stat-card:after { content:"";position:absolute;width:100px;height:100px;border-radius:50%;right:-30px;bottom:-50px;background:rgba(0,180,255,.08);filter:blur(5px); }
+  .stat-card .num { color:#5dd5ff;letter-spacing:-1px; }
+  .data-table th { color:#9eabc1;position:sticky;top:0;z-index:1; }
+  .data-table tbody tr { transition:background .16s ease; }
+  .data-table tbody tr:hover td { background:rgba(0,180,255,.045); }
+  .btn { transition:transform .18s ease,box-shadow .18s ease,background .18s ease; }
+  .btn:hover { transform:translateY(-1px); }
+  .admin-table-tools { display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px; }
+  .admin-search { flex:1;min-width:190px;display:flex;align-items:center;gap:10px;padding:0 13px;height:42px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.09);border-radius:11px;color:#8190aa; }
+  .admin-search input { width:100%;min-width:0;background:transparent;border:0;outline:0;color:#fff;font:inherit; }
+  .admin-search input::placeholder { color:#72819b; }
+  .admin-filter { height:42px;padding:0 12px;border-radius:11px;border:1px solid rgba(255,255,255,.1);background:#111827;color:#e9f0ff;font:inherit; }
+  .admin-export { height:42px;padding:0 14px;border-radius:11px;border:1px solid rgba(0,180,255,.2);background:rgba(0,180,255,.09);color:#78dcff;font-weight:700;cursor:pointer; }
+  .admin-export:hover { background:rgba(0,180,255,.16); }
+  .admin-result-count { font-size:12px;color:#8290a8;white-space:nowrap; }
+  .admin-no-results td { text-align:center!important;padding:26px!important;color:#8e9bb2; }
+  .sidebar .logo { letter-spacing:-.5px; }
+  :focus-visible { outline:2px solid #29c5ff;outline-offset:3px; }
+  @media(max-width:760px) {
+    .stat-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .main { padding:68px 13px 20px; }
+    .main-header h1 { font-size:21px; }
+    .admin-table-tools { align-items:stretch; }
+    .admin-search { flex-basis:100%; }
+    .admin-filter,.admin-export { flex:1; }
+  }
+  @media(max-width:420px) { .stat-grid { gap:9px; } .stat-card .num { font-size:22px; } }
+
   </style>
 </head>
 <body>
@@ -699,7 +741,7 @@
             .from('orders')
             .select('final_amount')
             .eq('status', 'delivered');
-          const revenue = revenueData ? revenueData.reduce((s, o) => s + (o.final_amount || 0), 0) : 0;
+          const revenue = revenueData ? revenueData.reduce((s, o) => s + Number(o.final_amount || 0), 0) : 0;
 
           const { data: userData } = await supabase.from('orders').select('user_email');
           const uniqueUsers = new Set(userData ? userData.map(o => o.user_email) : []);
@@ -722,7 +764,7 @@
             container.innerHTML = recent.map(o => `
               <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.03);">
                 <span><strong>${o.order_id}</strong> - ${o.package_name}</span>
-                <span>$${(o.final_amount || o.total_amount).toFixed(2)} <span class="status-badge" style="background:rgba(0,255,136,0.1);color:#8affc4;padding:2px 10px;border-radius:30px;font-size:11px;">${o.status}</span></span>
+                <span>$${Number(o.final_amount ?? o.total_amount ?? 0).toFixed(2)} <span class="status-badge" style="background:rgba(0,255,136,0.1);color:#8affc4;padding:2px 10px;border-radius:30px;font-size:11px;">${o.status}</span></span>
               </div>
             `).join('');
           }
@@ -844,7 +886,7 @@
             <td>${p.product_code}</td>
             <td>${p.name}</td>
             <td>${p.coins}</td>
-            <td>$${p.price.toFixed(2)}</td>
+            <td>$${Number(p.price || 0).toFixed(2)}</td>
             <td>${p.bonus_coins || 0}</td>
             <td>${p.is_popular ? '✅' : '❌'}</td>
             <td>
@@ -1177,6 +1219,81 @@
 
     })();
   </script>
+
+
+<script>
+(function(){
+  'use strict';
+  const configs = [
+    {page:'orders',tbody:'ordersTableBody',placeholder:'অর্ডার আইডি, Player ID, ইমেইল দিয়ে খুঁজুন',status:true},
+    {page:'users',tbody:'usersTableBody',placeholder:'ইউজারের ইমেইল দিয়ে খুঁজুন'},
+    {page:'products',tbody:'productsTableBody',placeholder:'প্রোডাক্ট নাম বা কোড দিয়ে খুঁজুন'},
+    {page:'coupons',tbody:'couponsTableBody',placeholder:'কুপন কোড দিয়ে খুঁজুন'},
+    {page:'admins',tbody:'adminsTableBody',placeholder:'অ্যাডমিন ইমেইল দিয়ে খুঁজুন'}
+  ];
+  function csvCell(value){return '"'+String(value??'').replace(/"/g,'""')+'"';}
+  configs.forEach(cfg=>{
+    const section=document.querySelector('.page-section[data-page="'+cfg.page+'"]');
+    const tbody=document.getElementById(cfg.tbody);
+    if(!section||!tbody) return;
+    const wrapper=section.querySelector('.table-wrapper');
+    if(!wrapper||section.querySelector('.admin-table-tools')) return;
+    const tools=document.createElement('div');
+    tools.className='admin-table-tools';
+    tools.innerHTML='<label class="admin-search"><i class="fas fa-search"></i><input type="search" aria-label="টেবিল খুঁজুন" placeholder="'+cfg.placeholder+'"></label>'+
+      (cfg.status?'<select class="admin-filter" aria-label="স্ট্যাটাস ফিল্টার"><option value="all">সব স্ট্যাটাস</option><option value="pending">Pending</option><option value="processing">Processing</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select>':'')+
+      '<button type="button" class="admin-export"><i class="fas fa-file-csv"></i> CSV Export</button><span class="admin-result-count" aria-live="polite"></span>';
+    wrapper.parentNode.insertBefore(tools,wrapper);
+    const search=tools.querySelector('input');
+    const status=tools.querySelector('select');
+    const count=tools.querySelector('.admin-result-count');
+    function applyFilter(){
+      const query=search.value.trim().toLocaleLowerCase();
+      const selected=status?status.value:'all';
+      let visible=0;
+      Array.from(tbody.querySelectorAll('tr')).forEach(row=>{
+        if(row.querySelector('.admin-no-results')) return;
+        const rowText=row.textContent.toLocaleLowerCase();
+        const statusSelect=row.querySelector('.order-status-select');
+        const rowStatus=statusSelect?statusSelect.value:'';
+        const matchText=!query||rowText.includes(query);
+        const matchStatus=!status||selected==='all'||rowStatus===selected;
+        const show=matchText&&matchStatus;
+        row.style.display=show?'':'none';
+        if(show) visible++;
+      });
+      const rows=Array.from(tbody.querySelectorAll('tr')).filter(r=>!r.querySelector('.admin-no-results'));
+      let empty=tbody.querySelector('.admin-no-results');
+      if(visible===0&&rows.length>0){
+        if(!empty){empty=document.createElement('tr');empty.className='admin-no-results';empty.innerHTML='<td colspan="10">কোনো মিল পাওয়া যায়নি</td>';tbody.appendChild(empty);}
+        empty.style.display='';
+      }else if(empty) empty.remove();
+      count.textContent=visible+'টি রো';
+    }
+    search.addEventListener('input',applyFilter);
+    if(status) status.addEventListener('change',applyFilter);
+    const observer=new MutationObserver(applyFilter);
+    observer.observe(tbody,{childList:true});
+    tools.querySelector('.admin-export').addEventListener('click',()=>{
+      const table=section.querySelector('table');
+      const header=Array.from(table.querySelectorAll('thead th')).map(th=>th.textContent.trim());
+      const rows=Array.from(tbody.querySelectorAll('tr')).filter(row=>!row.classList.contains('admin-no-results')&&row.style.display!=='none');
+      if(!rows.length){if(typeof window.showToast==='function')window.showToast('এক্সপোর্ট করার মতো ডেটা নেই','error');else alert('এক্সপোর্ট করার মতো ডেটা নেই');return;}
+      const body=rows.map(row=>Array.from(row.querySelectorAll('td')).map(cell=>{
+        const select=cell.querySelector('select');
+        return select?select.value:cell.textContent.trim().replace(/\s+/g,' ');
+      }));
+      const csv='\uFEFF'+[header,...body].map(row=>row.map(csvCell).join(',')).join('\r\n');
+      const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+      const url=URL.createObjectURL(blob);
+      const link=document.createElement('a');
+      link.href=url;link.download='eftopup-'+cfg.page+'-'+new Date().toISOString().slice(0,10)+'.csv';
+      document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);
+    });
+    applyFilter();
+  });
+})();
+</script>
 
 </body>
 </html>
