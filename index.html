@@ -447,6 +447,19 @@
         <div class="trust-item"><i class="fas fa-bolt"></i><div><strong>সহজ অর্ডার</strong><small>প্লেয়ার আইডি দিয়ে টপ-আপ রিকোয়েস্ট</small></div></div>
         <div class="trust-item"><i class="fas fa-list-check"></i><div><strong>অর্ডার ট্র্যাকিং</strong><small>সাইন ইন করে নিজের অর্ডারের অবস্থা দেখুন</small></div></div>
       </div>
+      <section class="home-products">
+        <div class="section-header">
+          <span class="section-tag">কয়েন প্যাকেজ</span>
+          <h2 class="section-title">জনপ্রিয় <span class="gradient-text">প্যাকেজগুলো</span></h2>
+          <p class="hero-desc" style="margin:12px auto 0;">আপনার পছন্দের কয়েন প্যাকেজ বেছে নিন।</p>
+        </div>
+        <div class="coin-grid" id="homeCoinGrid" aria-live="polite">
+          <div class="product-message glass-card">প্যাকেজ লোড হচ্ছে...</div>
+        </div>
+        <div style="text-align:center;margin:12px 0 36px;">
+          <button type="button" class="btn btn-outline" onclick="showPage('shop')">সব প্যাকেজ দেখুন <i class="fas fa-arrow-right"></i></button>
+        </div>
+      </section>
       <div class="faq-wrap">
         <h3>সাধারণ প্রশ্ন <span class="gradient-text">ও উত্তর</span></h3>
         <details class="faq-item"><summary>কয়েন অর্ডার করতে কী লাগবে?</summary><p>অ্যাকাউন্টে সাইন ইন করে টপ-আপ ফর্মে সঠিক Player ID, প্ল্যাটফর্ম এবং প্যাকেজ নির্বাচন করুন। অর্ডার দেওয়ার আগে তথ্যগুলো মিলিয়ে নিন।</p></details>
@@ -790,17 +803,22 @@
 
       // প্রোডাক্ট লোড
       async function loadProducts() {
-        const grid = document.getElementById('coinGrid');
-        if (!grid) return;
-        grid.setAttribute('aria-live', 'polite');
-        grid.innerHTML = '<div class="product-message glass-card">প্যাকেজ লোড হচ্ছে...</div>';
+        const grids = [
+          document.getElementById('coinGrid'),
+          document.getElementById('homeCoinGrid')
+        ].filter(Boolean);
+        if (!grids.length) return;
+        const loading = '<div class="product-message glass-card">প্যাকেজ লোড হচ্ছে...</div>';
+        grids.forEach(grid => {
+          grid.setAttribute('aria-live', 'polite');
+          grid.innerHTML = loading;
+        });
 
         try {
           const { data, error } = await supabase
             .from('products')
             .select('id, product_code, name, coins, price, bonus_coins, is_popular, category')
             .order('id', { ascending: true });
-
           if (error) throw error;
 
           const products = (Array.isArray(data) ? data : []).filter(p => {
@@ -810,37 +828,49 @@
               Number.isFinite(price) && price >= 0 && String(p.name || '').trim();
           });
 
+          const renderMessage = (title, message, retry = false) =>
+            '<div class="product-message glass-card"><i class="fas fa-box-open"></i><h3>' +
+            escapeHtml(title) + '</h3><p>' + escapeHtml(message) + '</p>' +
+            (retry ? '<button class="btn btn-primary btn-sm" type="button" data-retry-products>আবার চেষ্টা করুন</button>' : '') +
+            '</div>';
+
           if (!products.length) {
-            grid.innerHTML = '<div class="product-message glass-card"><i class="fas fa-box-open"></i><h3>এখনও কোনো কয়েন প্যাকেজ যোগ করা হয়নি</h3><p>অ্যাডমিন ড্যাশবোর্ডে Products টেবিলে প্যাকেজ যোগ করলে এখানে দেখা যাবে।</p></div>';
+            grids.forEach(grid => { grid.innerHTML = renderMessage('এখনও কোনো কয়েন প্যাকেজ যোগ করা হয়নি', 'অ্যাডমিন ড্যাশবোর্ডে Products টেবিলে প্যাকেজ যোগ করলে এখানে দেখা যাবে।'); });
             return;
           }
 
-          grid.innerHTML = products.map(p => {
+          const cards = products.map(p => {
             const coins = Number(p.coins);
             const price = Number(p.price);
             const bonus = Number(p.bonus_coins) || 0;
-            const label = escapeHtml(p.name);
             return `
               <div class="glass-card coin-card" style="position:relative;">
                 ${p.is_popular ? '<span class="coin-badge">🔥 জনপ্রিয়</span>' : ''}
                 <div class="icon"><i class="fas fa-coins"></i></div>
-                <div style="font-weight:600;font-size:16px;">${label}</div>
+                <div style="font-weight:600;font-size:16px;">${escapeHtml(p.name)}</div>
                 <div class="coins">${coins.toLocaleString()}</div>
                 ${bonus > 0 ? `<div class="bonus-coins">+${bonus.toLocaleString()} বোনাস</div>` : ''}
-                <div class="price">$ ${price.toFixed(2)}</div>
+                <div class="price">৳ ${price.toLocaleString('en-BD', {minimumFractionDigits:2, maximumFractionDigits:2})}</div>
                 <button class="btn btn-primary btn-sm" type="button" data-select-coins="${coins}"><i class="fas fa-shopping-cart"></i> কিনুন</button>
-              </div>
-            `;
+              </div>`;
           }).join('');
 
-          grid.querySelectorAll('[data-select-coins]').forEach(button => {
-            button.addEventListener('click', () => window.selectPackage(button.dataset.selectCoins));
+          grids.forEach((grid, index) => {
+            const visibleCards = index === 1 ? products.slice(0, 4).map((_, i) => i) : null;
+            grid.innerHTML = index === 1
+              ? products.slice(0, 4).map(p => {
+                  const coins = Number(p.coins), price = Number(p.price), bonus = Number(p.bonus_coins) || 0;
+                  return `<div class="glass-card coin-card" style="position:relative;">${p.is_popular ? '<span class="coin-badge">🔥 জনপ্রিয়</span>' : ''}<div class="icon"><i class="fas fa-coins"></i></div><div style="font-weight:600;font-size:16px;">${escapeHtml(p.name)}</div><div class="coins">${coins.toLocaleString()}</div>${bonus > 0 ? `<div class="bonus-coins">+${bonus.toLocaleString()} বোনাস</div>` : ''}<div class="price">৳ ${price.toLocaleString('en-BD',{minimumFractionDigits:2,maximumFractionDigits:2})}</div><button class="btn btn-primary btn-sm" type="button" data-select-coins="${coins}"><i class="fas fa-shopping-cart"></i> কিনুন</button></div>`;
+                }).join('')
+              : cards;
+            grid.querySelectorAll('[data-select-coins]').forEach(button => button.addEventListener('click', () => window.selectPackage(button.dataset.selectCoins)));
           });
         } catch (error) {
           console.error('Product loading failed:', error);
-          grid.innerHTML = '<div class="product-message glass-card"><i class="fas fa-triangle-exclamation"></i><h3>প্যাকেজ লোড করা যায়নি</h3><p>ডাটাবেস সংযোগ বা Products টেবিলের অনুমতি পরীক্ষা করে আবার চেষ্টা করুন।</p><button class="btn btn-primary btn-sm" type="button" id="retryProducts">আবার চেষ্টা করুন</button></div>';
-          const retry = document.getElementById('retryProducts');
-          if (retry) retry.addEventListener('click', loadProducts);
+          grids.forEach(grid => {
+            grid.innerHTML = '<div class="product-message glass-card"><i class="fas fa-triangle-exclamation"></i><h3>প্যাকেজ লোড করা যায়নি</h3><p>ডাটাবেস সংযোগ বা Products টেবিলের অনুমতি পরীক্ষা করে আবার চেষ্টা করুন।</p><button class="btn btn-primary btn-sm" type="button" data-retry-products>আবার চেষ্টা করুন</button></div>';
+            grid.querySelectorAll('[data-retry-products]').forEach(button => button.addEventListener('click', loadProducts));
+          });
         }
       }
       window.selectPackage = function(coins) {
