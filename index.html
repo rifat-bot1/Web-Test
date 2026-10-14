@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>eFootball প্রিমিয়াম টপ-আপ (Supabase)</title>
+  <title>eFTopUp — Premium eFootball Coin Shop</title>
+  <meta name="description" content="eFootball coin packages, secure account login, player ID top-up and order tracking in one premium shop." />
+  <meta name="theme-color" content="#080b12" />
+  <meta property="og:title" content="eFTopUp — Premium eFootball Coin Shop" />
+  <meta property="og:description" content="Choose your eFootball coin package and track your top-up orders." />
 
   <!-- Google Fonts & Font Awesome -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@400;600;700;800&display=swap" rel="stylesheet" />
@@ -266,6 +270,65 @@
     .spinner { width:60px; height:60px; border:4px solid rgba(0,180,255,0.1); border-top-color:var(--primary); border-radius:50%; animation:spin 0.8s linear infinite; }
     @keyframes spin { to{transform:rotate(360deg);} }
     .loader-text { margin-top:20px; font-family:'Orbitron',monospace; letter-spacing:3px; color:var(--primary); }
+  
+  /* ===== 2026 PREMIUM SHOP UPGRADE ===== */
+  :root { --bg-deep:#070a11; --panel:rgba(16,22,36,.78); --line:rgba(116,173,255,.16); --glow:0 20px 70px rgba(0,180,255,.12); }
+  html { scroll-behavior:smooth; scroll-padding-top:90px; }
+  body { background:radial-gradient(ellipse at 15% 0%,rgba(0,180,255,.09),transparent 34%),radial-gradient(ellipse at 90% 18%,rgba(123,47,252,.10),transparent 28%),#080b12; }
+  body:before { content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.18;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(to bottom,black,transparent 80%); }
+  #navbar { background:rgba(7,10,17,.82);border-bottom-color:rgba(95,170,255,.16);box-shadow:0 8px 35px rgba(0,0,0,.18); }
+  .logo { letter-spacing:-.7px; }
+  .hero { position:relative;padding:38px 0 48px; }
+  .hero:before { content:"";position:absolute;width:340px;height:340px;right:5%;top:8%;border-radius:50%;background:rgba(0,180,255,.08);filter:blur(70px);pointer-events:none; }
+  .hero-title { letter-spacing:-1.8px;text-wrap:balance; }
+  .hero-desc { color:#a7b2c8; }
+  .glass-card { background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018));border-color:rgba(135,177,255,.13);box-shadow:0 12px 40px rgba(0,0,0,.12); }
+  .glass-card:hover { border-color:rgba(0,180,255,.42);box-shadow:var(--glow); }
+  .coin-card { overflow:hidden;min-height:232px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px; }
+  .coin-card:after { content:"";position:absolute;inset:auto -25% -65% -25%;height:120px;background:radial-gradient(ellipse,rgba(0,180,255,.13),transparent 70%);pointer-events:none; }
+  .coin-card .icon { width:62px;height:62px;border-radius:19px;display:grid;place-items:center;background:linear-gradient(145deg,rgba(245,183,0,.17),rgba(255,255,255,.025));border:1px solid rgba(245,183,0,.16); }
+  .coin-card .icon i { filter:drop-shadow(0 0 12px rgba(245,183,0,.3)); }
+  .coin-card .coins { font-size:clamp(21px,2.4vw,28px); }
+  .coin-card .btn { margin-top:7px;position:relative;z-index:1; }
+  .shop-tools { display:grid;grid-template-columns:minmax(200px,1fr) auto;gap:16px;align-items:center;margin:8px 0 18px;padding:14px;border:1px solid var(--line);background:rgba(11,17,29,.72);border-radius:18px; }
+  .shop-search { display:flex;align-items:center;gap:10px;padding:0 14px;min-height:46px;border-radius:12px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);color:#8d9ab1; }
+  .shop-search input { width:100%;background:transparent;border:0;outline:0;color:#fff;font:inherit;min-width:0; }
+  .shop-search input::placeholder { color:#74819a; }
+  .shop-filters { display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end; }
+  .shop-filter { border:1px solid rgba(255,255,255,.10);border-radius:999px;padding:10px 14px;color:#aeb9ce;background:rgba(255,255,255,.035);font:600 12px Inter,sans-serif;cursor:pointer;transition:.2s; }
+  .shop-filter:hover,.shop-filter.active { color:#fff;border-color:rgba(0,180,255,.4);background:rgba(0,180,255,.12);box-shadow:0 0 20px rgba(0,180,255,.08); }
+  .shop-result { color:#8d9ab1;font-size:12px;margin:0 0 12px 4px; }
+  .trust-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0 26px; }
+  .trust-item { display:flex;align-items:center;gap:12px;padding:16px;border:1px solid var(--line);background:rgba(255,255,255,.025);border-radius:16px; }
+  .trust-item i { display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:13px;color:var(--primary);background:rgba(0,180,255,.10);font-size:17px; }
+  .trust-item strong { display:block;font-size:13px;margin-bottom:4px; }
+  .trust-item small { display:block;color:#8794ac;font-size:11px;line-height:1.5; }
+  .faq-wrap { max-width:850px;margin:50px auto 0; }
+  .faq-wrap h3 { font-size:23px;text-align:center;margin-bottom:18px; }
+  .faq-item { border:1px solid var(--line);background:rgba(255,255,255,.025);border-radius:14px;margin:10px 0;overflow:hidden; }
+  .faq-item summary { padding:17px 18px;cursor:pointer;font-weight:650;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:16px; }
+  .faq-item summary::-webkit-details-marker { display:none; }
+  .faq-item summary:after { content:"+";font-size:21px;color:var(--primary); }
+  .faq-item[open] summary:after { content:"−"; }
+  .faq-item p { color:#9caac1;padding:0 18px 18px;line-height:1.7;font-size:14px; }
+  .scroll-progress { position:fixed;top:0;left:0;height:3px;width:0;z-index:10001;background:linear-gradient(90deg,var(--primary),var(--secondary),var(--gold));box-shadow:0 0 15px rgba(0,180,255,.5); }
+  .back-top { position:fixed;right:18px;bottom:18px;width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:rgba(10,16,28,.9);color:#fff;z-index:1500;display:grid;place-items:center;opacity:0;pointer-events:none;transform:translateY(8px);transition:.2s;cursor:pointer; }
+  .back-top.visible { opacity:1;pointer-events:auto;transform:translateY(0); }
+  .empty-search { grid-column:1/-1;text-align:center;padding:35px 18px;border:1px dashed rgba(135,177,255,.2);border-radius:18px;color:#9caac1; }
+  .footer { color:#78849b; }
+  :focus-visible { outline:2px solid var(--primary);outline-offset:3px; }
+  @media(max-width:760px) {
+    .shop-tools { grid-template-columns:1fr; }
+    .shop-filters { justify-content:flex-start; }
+    .trust-grid { grid-template-columns:1fr; }
+    .trust-item { padding:13px; }
+    .hero { padding-top:18px; }
+    .hero-title { font-size:clamp(34px,10vw,46px); }
+    .hero-stats { gap:18px;flex-wrap:wrap; }
+    .toast-container { left:12px;right:12px;bottom:12px;max-width:none; }
+  }
+  @media(prefers-reduced-motion:reduce) { *,*:before,*:after { scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important; } }
+
   </style>
 </head>
 <body>
@@ -356,6 +419,17 @@
             <span style="color:var(--gold);font-weight:500;">প্রিমিয়াম কয়েন</span>
           </div>
         </div>
+      </div>
+      <div class="trust-grid" aria-label="স্টোর সুবিধা">
+        <div class="trust-item"><i class="fas fa-shield-halved"></i><div><strong>অ্যাকাউন্ট সুরক্ষা</strong><small>পাসওয়ার্ড কখনো শেয়ার করবেন না</small></div></div>
+        <div class="trust-item"><i class="fas fa-bolt"></i><div><strong>সহজ অর্ডার</strong><small>প্লেয়ার আইডি দিয়ে টপ-আপ রিকোয়েস্ট</small></div></div>
+        <div class="trust-item"><i class="fas fa-list-check"></i><div><strong>অর্ডার ট্র্যাকিং</strong><small>সাইন ইন করে নিজের অর্ডারের অবস্থা দেখুন</small></div></div>
+      </div>
+      <div class="faq-wrap">
+        <h3>সাধারণ প্রশ্ন <span class="gradient-text">ও উত্তর</span></h3>
+        <details class="faq-item"><summary>কয়েন অর্ডার করতে কী লাগবে?</summary><p>অ্যাকাউন্টে সাইন ইন করে টপ-আপ ফর্মে সঠিক Player ID, প্ল্যাটফর্ম এবং প্যাকেজ নির্বাচন করুন। অর্ডার দেওয়ার আগে তথ্যগুলো মিলিয়ে নিন।</p></details>
+        <details class="faq-item"><summary>আমার অর্ডার কোথায় দেখব?</summary><p>সাইন ইন করার পর “অর্ডার” পেজে আপনার অ্যাকাউন্টের সঙ্গে যুক্ত অর্ডার ও বর্তমান স্ট্যাটাস দেখতে পারবেন।</p></details>
+        <details class="faq-item"><summary>অর্ডার করার জন্য কি পাসওয়ার্ড দিতে হবে?</summary><p>না। eFootball বা গেম অ্যাকাউন্টের পাসওয়ার্ড, OTP বা recovery code কাউকে দেবেন না। প্রয়োজনীয় Player ID-ই দিন।</p></details>
       </div>
     </section>
 
@@ -1031,5 +1105,77 @@
 
     })();
   </script>
+
+  <script>
+  (function(){
+    'use strict';
+    const progress = document.createElement('div');
+    progress.className = 'scroll-progress';
+    progress.setAttribute('aria-hidden','true');
+    document.body.appendChild(progress);
+    const backTop = document.createElement('button');
+    backTop.className = 'back-top';
+    backTop.type = 'button';
+    backTop.setAttribute('aria-label','উপরে ফিরে যান');
+    backTop.innerHTML = '<i class="fas fa-arrow-up"></i>';
+    document.body.appendChild(backTop);
+    function onScroll(){
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      progress.style.width = (max > 0 ? (window.scrollY / max) * 100 : 0) + '%';
+      backTop.classList.toggle('visible', window.scrollY > 500);
+    }
+    window.addEventListener('scroll', onScroll, {passive:true});
+    backTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+    const grid = document.getElementById('coinGrid');
+    if(!grid) return;
+    const tools = document.createElement('div');
+    tools.className = 'shop-tools';
+    tools.innerHTML = '<label class="shop-search"><i class="fas fa-search"></i><input id="coinSearch" type="search" placeholder="কয়েন প্যাকেজ খুঁজুন..." aria-label="কয়েন প্যাকেজ খুঁজুন"></label><div class="shop-filters" role="group" aria-label="প্যাকেজ ফিল্টার"><button type="button" class="shop-filter active" data-filter="all">সব প্যাকেজ</button><button type="button" class="shop-filter" data-filter="popular">🔥 জনপ্রিয়</button><button type="button" class="shop-filter" data-filter="free">🆓 ফ্রি</button><button type="button" class="shop-filter" data-filter="premium">💎 ৫,০০০+</button></div>';
+    grid.parentNode.insertBefore(tools,grid);
+    const count = document.createElement('div');
+    count.className = 'shop-result';
+    count.setAttribute('aria-live','polite');
+    grid.parentNode.insertBefore(count,grid);
+    let activeFilter='all';
+    const search=document.getElementById('coinSearch');
+    function filterCards(){
+      const cards=Array.from(grid.querySelectorAll('.coin-card'));
+      const query=(search.value||'').trim().toLocaleLowerCase();
+      let visible=0;
+      cards.forEach(card=>{
+        const text=card.textContent.toLocaleLowerCase();
+        const priceEl=card.querySelector('.price');
+        const price=priceEl?Number((priceEl.textContent.match(/[0-9]+(?:\.[0-9]+)?/)||['-1'])[0]):-1;
+        const coinsEl=card.querySelector('.coins');
+        const coins=coinsEl?Number(coinsEl.textContent.replace(/[^0-9]/g,'')):0;
+        const popular=!!card.querySelector('.coin-badge');
+        const matchesQuery=!query||text.includes(query);
+        const matchesFilter=activeFilter==='all'||(activeFilter==='popular'&&popular)||(activeFilter==='free'&&price===0)||(activeFilter==='premium'&&coins>=5000);
+        const show=matchesQuery&&matchesFilter;
+        card.style.display=show?'':'none';
+        if(show) visible++;
+      });
+      let empty=grid.querySelector('.empty-search');
+      if(!visible){
+        if(!empty){empty=document.createElement('div');empty.className='empty-search';empty.innerHTML='<i class="fas fa-magnifying-glass" style="font-size:26px;color:#00b4ff;margin-bottom:10px"></i><p>কোনো প্যাকেজ পাওয়া যায়নি। অন্যভাবে খুঁজুন।</p>';grid.appendChild(empty);}
+      }else if(empty) empty.remove();
+      count.textContent=visible+'টি প্যাকেজ পাওয়া গেছে';
+    }
+    search.addEventListener('input',filterCards);
+    tools.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{
+      activeFilter=btn.dataset.filter;
+      tools.querySelectorAll('[data-filter]').forEach(b=>b.classList.toggle('active',b===btn));
+      filterCards();
+    }));
+    const observer=new MutationObserver(filterCards);
+    observer.observe(grid,{childList:true});
+    filterCards();
+    document.querySelectorAll('a[data-page]').forEach(link=>link.addEventListener('click',()=>{
+      const menu=document.getElementById('mobileMenu');
+      if(menu) menu.classList.remove('open');
+    }));
+  })();
+  </script>
+
 </body>
 </html>
