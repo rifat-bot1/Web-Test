@@ -1252,7 +1252,7 @@
       const selected=status?status.value:'all';
       let visible=0;
       Array.from(tbody.querySelectorAll('tr')).forEach(row=>{
-        if(row.querySelector('.admin-no-results')) return;
+        if(row.classList.contains('admin-no-results')) return;
         const rowText=row.textContent.toLocaleLowerCase();
         const statusSelect=row.querySelector('.order-status-select');
         const rowStatus=statusSelect?statusSelect.value:'';
@@ -1262,7 +1262,7 @@
         row.style.display=show?'':'none';
         if(show) visible++;
       });
-      const rows=Array.from(tbody.querySelectorAll('tr')).filter(r=>!r.querySelector('.admin-no-results'));
+      const rows=Array.from(tbody.querySelectorAll('tr')).filter(r=>!r.classList.contains('admin-no-results'));
       let empty=tbody.querySelector('.admin-no-results');
       if(visible===0&&rows.length>0){
         if(!empty){empty=document.createElement('tr');empty.className='admin-no-results';empty.innerHTML='<td colspan="10">কোনো মিল পাওয়া যায়নি</td>';tbody.appendChild(empty);}
