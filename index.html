@@ -680,7 +680,7 @@
               <div class="icon"><i class="fas fa-coins"></i></div>
               <div style="font-weight:600;font-size:16px;">${escapeHtml(p.name)}</div>
               <div class="coins">${coins.toLocaleString()}</div>
-              <div class="price">${price.toFixed(2)}</div>
+              <div class="price">$${price.toFixed(2)}</div>
               <button class="btn btn-primary btn-sm" type="button" data-select-coins="${coins}"><i class="fas fa-shopping-cart"></i> কিনুন</button>
             </div>
           `;
@@ -727,7 +727,7 @@
           const dateText = Number.isNaN(date.getTime()) ? 'তারিখ অজানা' : date.toLocaleDateString();
           return `
             <div class="order-item">
-              <div><span class="order-id">${escapeHtml(o.order_id)}</span> <span class="order-meta">${escapeHtml(o.package_name)} × ${quantity} · ${amount.toFixed(2)} · ${dateText}</span></div>
+              <div><span class="order-id">${escapeHtml(o.order_id)}</span> <span class="order-meta">${escapeHtml(o.package_name)} × ${quantity} · $${amount.toFixed(2)} · ${dateText}</span></div>
               <span class="status-badge ${status}">${escapeHtml(status.charAt(0).toUpperCase()+status.slice(1))}</span>
             </div>
           `;
@@ -762,7 +762,7 @@
             <td>${escapeHtml(o.player_id)}</td>
             <td>${escapeHtml(o.username || '-')}</td>
             <td>${escapeHtml(o.package_name)}</td>
-            <td>${safeNumber(o.final_amount || o.total_amount).toFixed(2)}</td>
+            <td>$${safeNumber(o.final_amount || o.total_amount).toFixed(2)}</td>
             <td>
               <select class="status-select" data-id="${escapeHtml(o.id)}" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:#fff;font-size:13px;">
                 <option value="pending" ${safeOrderStatus(o.status)==='pending'?'selected':''}>Pending</option>
