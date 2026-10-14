@@ -542,6 +542,17 @@
         })[char]);
       }
 
+      function safeNumber(value, fallback = 0) {
+        const number = Number(value);
+        return Number.isFinite(number) ? number : fallback;
+      }
+
+      function safeOrderStatus(value) {
+        const allowed = new Set(['pending', 'processing', 'delivered']);
+        const status = String(value ?? '').toLowerCase();
+        return allowed.has(status) ? status : 'pending';
+      }
+
       // ===== ৪. অথেন্টিকেশন স্টেট =====
       let currentUser = null;
       let isAdmin = false;
@@ -659,22 +670,35 @@
         const { data, error } = await supabase.from('products').select('*').order('id');
         if (error) { console.error(error); return; }
         const grid = document.getElementById('coinGrid');
-        grid.innerHTML = data.map(p => `
-          <div class="glass-card coin-card" style="position:relative;">
-            ${p.is_popular ? '<span class="coin-badge">🔥 জনপ্রিয়</span>' : ''}
-            <div class="icon"><i class="fas fa-coins"></i></div>
-            <div style="font-weight:600;font-size:16px;">${escapeHtml(p.name)}</div>
-            <div class="coins">${Number(p.coins).toLocaleString()}</div>
-            <div class="price">$${p.price.toFixed(2)}</div>
-            <button class="btn btn-primary btn-sm" onclick="window.selectPackage(${p.coins})"><i class="fas fa-shopping-cart"></i> কিনুন</button>
-          </div>
-        `).join('');
+        grid.innerHTML = data.map(p => {
+          const coins = Number(p.coins);
+          const price = Number(p.price);
+          if (!Number.isSafeInteger(coins) || coins <= 0 || !Number.isFinite(price) || price < 0) return '';
+          return `
+            <div class="glass-card coin-card" style="position:relative;">
+              ${p.is_popular ? '<span class="coin-badge">🔥 জনপ্রিয়</span>' : ''}
+              <div class="icon"><i class="fas fa-coins"></i></div>
+              <div style="font-weight:600;font-size:16px;">${escapeHtml(p.name)}</div>
+              <div class="coins">${coins.toLocaleString()}</div>
+              <div class="price">${price.toFixed(2)}</div>
+              <button class="btn btn-primary btn-sm" type="button" data-select-coins="${coins}"><i class="fas fa-shopping-cart"></i> কিনুন</button>
+            </div>
+          `;
+        }).join('');
+        grid.querySelectorAll('[data-select-coins]').forEach(button => {
+          button.addEventListener('click', () => window.selectPackage(button.dataset.selectCoins));
+        });
       }
 
       window.selectPackage = function(coins) {
+        const numericCoins = Number(coins);
+        if (!Number.isSafeInteger(numericCoins) || numericCoins <= 0) {
+          showToast('প্যাকেজটি সঠিক নয়। আবার চেষ্টা করুন।', 'error');
+          return;
+        }
         const sel = document.getElementById('coinPackage');
         if (sel) {
-          sel.value = coins.toString();
+          sel.value = String(numericCoins);
           sel.dispatchEvent(new Event('change'));
         }
         showPage('topup');
@@ -695,12 +719,19 @@
             `<div style="text-align:center;padding:30px;color:#8892a8;"><i class="fas fa-inbox"></i><p>কোনো অর্ডার নেই</p></div>`;
           return;
         }
-        container.innerHTML = data.map(o => `
-          <div class="order-item">
-            <div><span class="order-id">${escapeHtml(o.order_id)}</span> <span class="order-meta">${escapeHtml(o.package_name)} × ${Number(o.quantity)} · $${(o.final_amount || o.total_amount).toFixed(2)} · ${new Date(o.created_at).toLocaleDateString()}</span></div>
-            <span class="status-badge ${o.status}">${escapeHtml(String(o.status || '').charAt(0).toUpperCase()+String(o.status || '').slice(1))}</span>
-          </div>
-        `).join('');
+        container.innerHTML = data.map(o => {
+          const status = safeOrderStatus(o.status);
+          const amount = safeNumber(o.final_amount || o.total_amount);
+          const quantity = safeNumber(o.quantity);
+          const date = new Date(o.created_at);
+          const dateText = Number.isNaN(date.getTime()) ? 'তারিখ অজানা' : date.toLocaleDateString();
+          return `
+            <div class="order-item">
+              <div><span class="order-id">${escapeHtml(o.order_id)}</span> <span class="order-meta">${escapeHtml(o.package_name)} × ${quantity} · ${amount.toFixed(2)} · ${dateText}</span></div>
+              <span class="status-badge ${status}">${escapeHtml(status.charAt(0).toUpperCase()+status.slice(1))}</span>
+            </div>
+          `;
+        }).join('');
       }
 
       // অ্যাডমিন ড্যাশবোর্ড
@@ -731,17 +762,17 @@
             <td>${escapeHtml(o.player_id)}</td>
             <td>${escapeHtml(o.username || '-')}</td>
             <td>${escapeHtml(o.package_name)}</td>
-            <td>$${(o.final_amount || o.total_amount).toFixed(2)}</td>
+            <td>${safeNumber(o.final_amount || o.total_amount).toFixed(2)}</td>
             <td>
-              <select class="status-select" data-id="${o.id}" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:#fff;font-size:13px;">
-                <option value="pending" ${o.status==='pending'?'selected':''}>Pending</option>
-                <option value="processing" ${o.status==='processing'?'selected':''}>Processing</option>
-                <option value="delivered" ${o.status==='delivered'?'selected':''}>Delivered</option>
+              <select class="status-select" data-id="${escapeHtml(o.id)}" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:#fff;font-size:13px;">
+                <option value="pending" ${safeOrderStatus(o.status)==='pending'?'selected':''}>Pending</option>
+                <option value="processing" ${safeOrderStatus(o.status)==='processing'?'selected':''}>Processing</option>
+                <option value="delivered" ${safeOrderStatus(o.status)==='delivered'?'selected':''}>Delivered</option>
               </select>
             </td>
             <td>
-              <button class="edit-btn" onclick="window.adminUpdateStatus(${o.id})"><i class="fas fa-check"></i></button>
-              <button class="delete-btn" onclick="window.adminDeleteOrder(${o.id})"><i class="fas fa-trash"></i></button>
+              <button class="edit-btn" type="button" data-order-action="update" data-id="${escapeHtml(o.id)}"><i class="fas fa-check"></i></button>
+              <button class="delete-btn" type="button" data-order-action="delete" data-id="${escapeHtml(o.id)}"><i class="fas fa-trash"></i></button>
             </td>
           </tr>
         `).join('');
@@ -749,33 +780,58 @@
         // ইভেন্ট লিসেনার for status select
         document.querySelectorAll('.status-select').forEach(sel => {
           sel.addEventListener('change', async function() {
-            const id = parseInt(this.dataset.id);
+            const id = Number(this.dataset.id);
             const status = this.value;
+            if (!Number.isSafeInteger(id) || id <= 0 || !['pending', 'processing', 'delivered'].includes(status)) {
+              showToast('অর্ডার আইডি বা স্ট্যাটাস সঠিক নয়', 'error');
+              return;
+            }
             const { error } = await supabase.from('orders').update({ status }).eq('id', id);
-            if (error) { showToast(error.message, 'error'); return; }
+            if (error) { showToast('স্ট্যাটাস আপডেট করা যায়নি', 'error'); console.error(error); return; }
             showToast('স্ট্যাটাস আপডেট হয়েছে', 'success');
             loadAdminDashboard();
             loadUserOrders();
+          });
+        });
+        tbody.querySelectorAll('[data-order-action]').forEach(button => {
+          button.addEventListener('click', () => {
+            const id = Number(button.dataset.id);
+            if (!Number.isSafeInteger(id) || id <= 0) {
+              showToast('অর্ডার আইডি সঠিক নয়', 'error');
+              return;
+            }
+            if (button.dataset.orderAction === 'update') window.adminUpdateStatus(id);
+            if (button.dataset.orderAction === 'delete') window.adminDeleteOrder(id);
           });
         });
       }
 
       // গ্লোবাল অ্যাডমিন অ্যাকশন
       window.adminUpdateStatus = async function(id) {
-        const sel = document.querySelector(`.status-select[data-id="${id}"]`);
-        if (!sel) return;
-        const status = sel.value;
-        const { error } = await supabase.from('orders').update({ status }).eq('id', id);
-        if (error) { showToast(error.message, 'error'); return; }
+        const orderId = Number(id);
+        if (!Number.isSafeInteger(orderId) || orderId <= 0 || !isAdmin) {
+          showToast('এই কাজের অনুমতি নেই বা অর্ডার আইডি ভুল', 'error');
+          return;
+        }
+        const sel = Array.from(document.querySelectorAll('.status-select'))
+          .find(item => Number(item.dataset.id) === orderId);
+        if (!sel || !['pending', 'processing', 'delivered'].includes(sel.value)) return;
+        const { error } = await supabase.from('orders').update({ status: sel.value }).eq('id', orderId);
+        if (error) { showToast('স্ট্যাটাস আপডেট করা যায়নি', 'error'); console.error(error); return; }
         showToast('স্ট্যাটাস আপডেট হয়েছে', 'success');
         loadAdminDashboard();
         loadUserOrders();
       };
 
       window.adminDeleteOrder = async function(id) {
+        const orderId = Number(id);
+        if (!Number.isSafeInteger(orderId) || orderId <= 0 || !isAdmin) {
+          showToast('এই কাজের অনুমতি নেই বা অর্ডার আইডি ভুল', 'error');
+          return;
+        }
         if (!confirm('অর্ডারটি ডিলিট করবেন?')) return;
-        const { error } = await supabase.from('orders').delete().eq('id', id);
-        if (error) { showToast(error.message, 'error'); return; }
+        const { error } = await supabase.from('orders').delete().eq('id', orderId);
+        if (error) { showToast('অর্ডার ডিলিট করা যায়নি', 'error'); console.error(error); return; }
         showToast('অর্ডার ডিলিট করা হয়েছে', 'success');
         loadAdminDashboard();
         loadUserOrders();
@@ -865,8 +921,7 @@
           else if (coupon === 'LOYALTY20') discount = data.price * qty * 0.20;
 
           const order = {
-            order_id: 'EF-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6)
-              .toUpperCase(),
+            order_id: 'EF-' + Date.now().toString(36).toUpperCase() + '-' + crypto.randomUUID().replace(/-/g, '').slice(0, 6).toUpperCase(),
             player_id: playerId,
             username: document.getElementById('username').value.trim() || currentUser.email?.split('@')[0] || 'User',
             platform,
