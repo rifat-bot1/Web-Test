@@ -336,6 +336,22 @@
   <!-- ===== লোডিং ===== -->
   <div id="loading"><div class="spinner"></div><div class="loader-text">লোড হচ্ছে...</div></div>
 
+  <script>
+    // Failsafe: never leave the storefront covered by the loading overlay.
+    (function () {
+      function revealStorefront() {
+        var loader = document.getElementById('loading');
+        if (loader) {
+          loader.classList.add('hide');
+          loader.style.display = 'none';
+        }
+        document.body.classList.add('loaded');
+      }
+      window.addEventListener('load', revealStorefront, { once: true });
+      window.setTimeout(revealStorefront, 2000);
+    })();
+  </script>
+
   <!-- ===== টোস্ট ===== -->
   <div class="toast-container" id="toastContainer"></div>
 
