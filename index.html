@@ -521,7 +521,9 @@
         const t = document.createElement('div');
         t.className = `toast ${type}`;
         const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
-        t.innerHTML = `<i class="fas ${icons[type] || icons.info}"></i> ${msg}`;
+        const icon = document.createElement('i');
+        icon.className = `fas ${icons[type] || icons.info}`;
+        t.append(icon, document.createTextNode(String(msg ?? '')));
         c.appendChild(t);
         setTimeout(() => { t.classList.add('toast-out'); setTimeout(() => t.remove(), 300); }, duration);
       }
@@ -532,6 +534,13 @@
         document.body.classList.add('loaded');
       });
       setTimeout(() => document.getElementById('loading').classList.add('hide'), 4000);
+
+      // Escape database/user-controlled text before inserting it into HTML.
+      function escapeHtml(value) {
+        return String(value ?? '').replace(/[&<>"']/g, char => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[char]);
+      }
 
       // ===== ৪. অথেন্টিকেশন স্টেট =====
       let currentUser = null;
@@ -545,17 +554,17 @@
           const email = user.email || '';
           const initial = email.charAt(0).toUpperCase();
           section.innerHTML = `
-            <div class="user-avatar" title="${email}"><span>${initial}</span></div>
+            <div class="user-avatar" title="${escapeHtml(email)}"><span>${escapeHtml(initial)}</span></div>
             <button class="auth-btn auth-btn-outline" id="logoutBtn">লগআউট</button>
           `;
           document.getElementById('logoutBtn').addEventListener('click', signOut);
           // অ্যাডমিন চেক
           isAdmin = (email === 'mohammaddrifat.edu@gmail.com');
           if (isAdmin) {
-            document.querySelector('[data-page="dashboard"]').style.display = '';
+            document.querySelectorAll('[data-page="dashboard"]').forEach(link => { link.style.display = ''; });
             loadAdminDashboard();
           } else {
-            document.querySelector('[data-page="dashboard"]').style.display = 'none';
+            document.querySelectorAll('[data-page="dashboard"]').forEach(link => { link.style.display = 'none'; });
           }
           loadUserOrders();
         } else {
@@ -563,7 +572,7 @@
             <button class="auth-btn" id="loginBtn"><i class="fas fa-sign-in-alt"></i> সাইন ইন</button>
           `;
           document.getElementById('loginBtn').addEventListener('click', () => openAuthModal('signin'));
-          document.querySelector('[data-page="dashboard"]').style.display = 'none';
+          document.querySelectorAll('[data-page="dashboard"]').forEach(link => { link.style.display = 'none'; });
           document.getElementById('ordersList').innerHTML =
             `<div style="text-align:center;padding:30px;color:#8892a8;"><i class="fas fa-lock"></i><p>অর্ডার দেখতে সাইন ইন করুন</p></div>`;
         }
@@ -595,26 +604,24 @@
         btn.disabled = true;
         btn.textContent = 'লোড হচ্ছে...';
 
-        let result;
-        if (authMode === 'signin') {
-          result = await supabase.auth.signInWithPassword({ email, password });
-        } else {
-          result = await supabase.auth.signUp({ email, password });
-        }
+        try {
+          const result = authMode === 'signin'
+            ? await supabase.auth.signInWithPassword({ email, password })
+            : await supabase.auth.signUp({ email, password });
 
-        btn.disabled = false;
-        btn.textContent = authMode === 'signin' ? 'সাইন ইন' : 'সাইন আপ';
-
-        if (result.error) {
-          showToast(result.error.message, 'error');
-        } else {
-          authModal.classList.remove('open');
-          showToast(authMode === 'signin' ? 'সাইন ইন সফল!' : 'সাইন আপ সফল! এখন সাইন ইন করুন', 'success');
-          if (authMode === 'signup') {
-            // সাইন আপ হলে আবার সাইন ইন মোডে নিয়ে যাই
-            openAuthModal('signin');
+          if (result.error) {
+            showToast(result.error.message, 'error');
+          } else {
+            authModal.classList.remove('open');
+            showToast(authMode === 'signin' ? 'সাইন ইন সফল!' : 'সাইন আপ সফল! এখন সাইন ইন করুন', 'success');
+            if (authMode === 'signup') openAuthModal('signin');
           }
-          // ইউজার সেট হবে ইভেন্ট লিসেনারের মাধ্যমে
+        } catch (error) {
+          console.error('Authentication failed:', error);
+          showToast('সংযোগে সমস্যা হয়েছে। আবার চেষ্টা করুন।', 'error');
+        } finally {
+          btn.disabled = false;
+          btn.textContent = authMode === 'signin' ? 'সাইন ইন' : 'সাইন আপ';
         }
       });
 
@@ -656,8 +663,8 @@
           <div class="glass-card coin-card" style="position:relative;">
             ${p.is_popular ? '<span class="coin-badge">🔥 জনপ্রিয়</span>' : ''}
             <div class="icon"><i class="fas fa-coins"></i></div>
-            <div style="font-weight:600;font-size:16px;">${p.name}</div>
-            <div class="coins">${p.coins.toLocaleString()}</div>
+            <div style="font-weight:600;font-size:16px;">${escapeHtml(p.name)}</div>
+            <div class="coins">${Number(p.coins).toLocaleString()}</div>
             <div class="price">$${p.price.toFixed(2)}</div>
             <button class="btn btn-primary btn-sm" onclick="window.selectPackage(${p.coins})"><i class="fas fa-shopping-cart"></i> কিনুন</button>
           </div>
@@ -690,8 +697,8 @@
         }
         container.innerHTML = data.map(o => `
           <div class="order-item">
-            <div><span class="order-id">${o.order_id}</span> <span class="order-meta">${o.package_name} × ${o.quantity} · $${(o.final_amount || o.total_amount).toFixed(2)} · ${new Date(o.created_at).toLocaleDateString()}</span></div>
-            <span class="status-badge ${o.status}">${o.status.charAt(0).toUpperCase()+o.status.slice(1)}</span>
+            <div><span class="order-id">${escapeHtml(o.order_id)}</span> <span class="order-meta">${escapeHtml(o.package_name)} × ${Number(o.quantity)} · $${(o.final_amount || o.total_amount).toFixed(2)} · ${new Date(o.created_at).toLocaleDateString()}</span></div>
+            <span class="status-badge ${o.status}">${escapeHtml(String(o.status || '').charAt(0).toUpperCase()+String(o.status || '').slice(1))}</span>
           </div>
         `).join('');
       }
@@ -720,10 +727,10 @@
         }
         tbody.innerHTML = allOrders.map(o => `
           <tr>
-            <td><strong>${o.order_id}</strong></td>
-            <td>${o.player_id}</td>
-            <td>${o.username || '-'}</td>
-            <td>${o.package_name}</td>
+            <td><strong>${escapeHtml(o.order_id)}</strong></td>
+            <td>${escapeHtml(o.player_id)}</td>
+            <td>${escapeHtml(o.username || '-')}</td>
+            <td>${escapeHtml(o.package_name)}</td>
             <td>$${(o.final_amount || o.total_amount).toFixed(2)}</td>
             <td>
               <select class="status-select" data-id="${o.id}" style="background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:#fff;font-size:13px;">
@@ -791,7 +798,8 @@
 
         function updateSummary() {
           const val = pkgSelect.value;
-          const qty = parseInt(qtyInput.value) || 1;
+          const rawQty = Number.parseInt(qtyInput.value, 10);
+          const qty = Number.isInteger(rawQty) ? Math.min(10, Math.max(1, rawQty)) : 1;
           const coupon = couponInput.value.trim().toUpperCase();
           if (!val || !pkgData[val]) {
             document.getElementById('summaryPackage').textContent = 'প্যাকেজ বেছে নিন';
@@ -844,7 +852,12 @@
           if (!valid) return;
 
           const data = pkgData[pkgVal];
-          const qty = parseInt(qtyInput.value) || 1;
+          const qty = Number(qtyInput.value);
+          if (!Number.isInteger(qty) || qty < 1 || qty > 10) {
+            showToast('পরিমাণ ১ থেকে ১০-এর মধ্যে দিন', 'error');
+            qtyInput.focus();
+            return;
+          }
           const coupon = couponInput.value.trim().toUpperCase();
           let discount = 0;
           if (coupon === 'WELCOME500') discount = data.price * qty * 0.10;
