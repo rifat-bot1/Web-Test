@@ -612,27 +612,54 @@
         const email = document.getElementById('authEmail').value.trim();
         const password = document.getElementById('authPassword').value;
         const btn = document.getElementById('authSubmitBtn');
+        const submittedMode = authMode;
         btn.disabled = true;
         btn.textContent = 'লোড হচ্ছে...';
 
         try {
-          const result = authMode === 'signin'
+          const result = submittedMode === 'signin'
             ? await supabase.auth.signInWithPassword({ email, password })
-            : await supabase.auth.signUp({ email, password });
+            : await supabase.auth.signUp({
+                email,
+                password,
+                options: { emailRedirectTo: window.location.origin }
+              });
 
           if (result.error) {
-            showToast(result.error.message, 'error');
-          } else {
+            console.error('Supabase authentication error:', {
+              mode: submittedMode,
+              name: result.error.name,
+              status: result.error.status,
+              code: result.error.code,
+              message: result.error.message
+            });
+            showToast(result.error.message || 'অথেন্টিকেশন ব্যর্থ হয়েছে।', 'error', 6500);
+            return;
+          }
+
+          if (submittedMode === 'signin') {
             authModal.classList.remove('open');
-            showToast(authMode === 'signin' ? 'সাইন ইন সফল!' : 'সাইন আপ সফল! এখন সাইন ইন করুন', 'success');
-            if (authMode === 'signup') openAuthModal('signin');
+            showToast('সাইন ইন সফল!', 'success');
+            return;
+          }
+
+          // Supabase may require email confirmation, in which case signUp succeeds
+          // but no authenticated session is returned yet.
+          if (result.data?.session) {
+            authModal.classList.remove('open');
+            showToast('সাইন আপ সফল হয়েছে এবং আপনি সাইন ইন হয়েছেন!', 'success', 5500);
+          } else if (result.data?.user) {
+            authModal.classList.remove('open');
+            showToast('সাইন আপ হয়েছে। ইমেইলে আসা confirmation link খুলে তারপর সাইন ইন করুন।', 'success', 6500);
+          } else {
+            showToast('সাইন আপের ফলাফল নিশ্চিত করা যায়নি। Console ও Supabase Auth Logs পরীক্ষা করুন।', 'error', 6500);
           }
         } catch (error) {
-          console.error('Authentication failed:', error);
-          showToast('সংযোগে সমস্যা হয়েছে। আবার চেষ্টা করুন।', 'error');
+          console.error('Unexpected Supabase authentication failure:', error);
+          showToast(error?.message || 'সংযোগে সমস্যা হয়েছে। ইন্টারনেট ও Supabase URL/Key পরীক্ষা করুন।', 'error', 6500);
         } finally {
           btn.disabled = false;
-          btn.textContent = authMode === 'signin' ? 'সাইন ইন' : 'সাইন আপ';
+          btn.textContent = submittedMode === 'signin' ? 'সাইন ইন' : 'সাইন আপ';
         }
       });
 
